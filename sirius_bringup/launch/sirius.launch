@@ -1,0 +1,8 @@
+<launch>
+    <arg name="model" default="$(find sirius_description)/robots/sirius.urdf.xacro"/>
+    <arg name="robot_state_frequency" default="100"  />
+
+    <include file="$(find sirius_description)/launch/sirius_description.launch" pass_all_args="true" />
+    <include file="$(find sirius_bringup)/launch/hardware_interfaces.launch" />
+    <include file="$(find sirius_control)/launch/controllers.launch" />
+</launch>

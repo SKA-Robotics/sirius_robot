@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="name"            default="front_camera"/>
+    <arg name="enableRviz"            default="true"/>
+
+    <arg name="mxId"                 default="19443010B1B2F51200"/>
+    <arg name="tf"         default="front_camera" />
+    <arg name="imu_rate"         default="200" />
+    <arg name="magnetometer_rate"         default="100" />
+    <arg name="fps"            default="20"  />
+    <arg name="stereoResolution"        default="720p"/> 
+    <arg name="rgbResolution"        default="1080p"/> 
+    <arg name="angularVelCovariance"  default="0.0004829535864265493"   />
+    <arg name="linearAccelCovariance" default="0.020988637794234512"   /> <!-- Variance in m/s^2-->
+    <arg name="rotationCovariance"  default="$(eval (3.5 * pi/180)**2)"   /> <!-- Variance in radians-->
+    <arg name="magneticCovariance" default="0"   />
+    
+    <arg name="rotationVectorType" default="ROTATION_VECTOR" />
+    <arg name="accelerometerType" default="LINEAR_ACCELERATION" />
+    <arg name="gyroscopeType" default="" />
+    <arg name="magnetometerType" default="" />  
+
+
+    <node name="$(arg name)" pkg="sirius_depthai_driver" type="sirius_depthai_driver" output="screen" required="true">
+        <param name="mxId"                  value="$(arg mxId)"/>
+        <param name="imu_rate"            value="$(arg imu_rate)" />
+        <param name="magnetometer_rate"            value="$(arg magnetometer_rate)" />
+        <param name="tf"            value="$(arg tf)" />
+        <param name="fps"            value="$(arg fps)" />
+        <param name="stereoResolution"        value="$(arg stereoResolution)" />
+        <param name="rgbResolution"        value="$(arg rgbResolution)" />
+        <param name="angularVelCovariance"  value="$(arg angularVelCovariance)" />
+        <param name="linearAccelCovariance" value="$(arg linearAccelCovariance)" />
+        <param name="rotationCovariance"  value="$(arg rotationCovariance)" />
+        <param name="magneticCovariance" value="$(arg magneticCovariance)" />
+        <param name="rotationVectorType" value="$(arg rotationVectorType)" />
+        <param name="accelerometerType" value="$(arg accelerometerType)" />
+        <param name="gyroscopeType" value="$(arg gyroscopeType)" />
+        <param name="magnetometerType" value="$(arg magnetometerType)" />
+        <!-- <param name="left_camera_param_uri" value="$(arg left_camera_param_uri)" />
+        <param name="right_camera_param_uri" value="$(arg right_camera_param_uri)" />
+        <param name="rgb_camera_param_uri" value="$(arg rgb_camera_param_uri)" /> -->
+    </node>      
+   
+    
+    <node pkg="nodelet" type="nodelet" name="nodelet_manager"  args="manager" output="screen"/>
+
+    <node pkg="nodelet" type="nodelet" name="depth_image_convertion_nodelet"
+        args="load depth_image_proc/convert_metric nodelet_manager">
+        <remap from="image_raw" to="/$(arg name)/depth_registered/image_raw"/>    
+        <remap from="image" to="/$(arg name)/depth_registered/image"/>
+    </node>
+
+
+    <node pkg="nodelet" type="nodelet" name="depth_image_to_rgb_pointcloud"
+        args="load depth_image_proc/point_cloud_xyzrgb nodelet_manager">
+        <param name="queue_size"          value="10"/>
+
+        <remap from="rgb/camera_info" to="/$(arg name)/rgb/camera_info"/>
+        <remap from="rgb/image_rect_color" to="/$(arg name)/rgb/image_raw"/>
+        <remap from="depth_registered/image_rect" to="/$(arg name)/depth_registered/image"/>    
+        <remap from="depth_registered/points" to="/$(arg name)/point_cloud/cloud_registered"/>
+    </node>
+
+    <node pkg="imu_transformer" type="imu_transformer_node" name="imu_data_transformer" output="screen">
+        <remap from="imu_in/data" to="/$(arg imu_name)/imu/data"/>
+        <remap from="imu_out/data" to="/imu_compensated/data"/>
+        <param name="target_frame" value="base_link"/>
+    </node>
+</launch>

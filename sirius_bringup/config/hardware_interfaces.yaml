@@ -1,0 +1,29 @@
+robot_hardware:
+  - wheels_left
+  - wheels_right
+wheels_left:
+  type: sirius/OdriveHWInterface
+  motor0: front_left_wheel_joint
+  motor1: back_left_wheel_joint
+wheels_right:
+  type: sirius/OdriveHWInterface
+  motor0: front_right_wheel_joint
+  motor1: back_right_wheel_joint
+odrive_driver: 
+  drivers: ['wheels_left','wheels_right']
+  wheels_left: 
+    serial_number: '208536885753'
+    motor0: 
+      reverse_motor: True
+      transmission: 43
+    motor1: 
+      reverse_motor: True
+      transmission: 43  
+  wheels_right: 
+    serial_number: '306A36543431'
+    motor0: 
+      reverse_motor: False
+      transmission: 43
+    motor1:
+      reverse_motor: False
+      transmission: 43

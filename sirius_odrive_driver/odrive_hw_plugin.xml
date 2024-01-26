@@ -1,0 +1,7 @@
+<library path="lib/libsirius_odrive_hardware_interfaces">
+  <class name="sirius/OdriveHWInterface" type="sirius::OdriveHWInterface" base_class_type="hardware_interface::RobotHW">
+    <description>
+      Interface for odrive motor controllers
+    </description>
+  </class>
+</library>

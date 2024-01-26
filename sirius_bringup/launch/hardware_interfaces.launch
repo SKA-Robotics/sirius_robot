@@ -1,0 +1,19 @@
+<launch>
+    <rosparam file="$(find sirius_bringup)/config/hardware_interfaces.yaml" command="load"/> 
+
+    <remap from="/sirius/controller/wheels/cmd_vel" to="/cmd_vel" />
+    <remap from="/sirius/controller/wheels/odom" to="/wheels/odom" />
+
+    <node name="sirius_control" pkg="sirius_control" type="sirius_control" output="screen"/>
+
+    <node name="odrive_driver" pkg="odrive_driver" type="driver.py" output="screen">
+        <remap from="/odrive_driver/wheels_left/motor0/joint_state" to="/wheels_left/motor0/joint_state"/>
+        <remap from="/odrive_driver/wheels_left/motor0/set_joint_state" to="/wheels_left/motor0/set_joint_state"/>
+        <remap from="/odrive_driver/wheels_left/motor1/joint_state" to="/wheels_left/motor1/joint_state"/>
+        <remap from="/odrive_driver/wheels_left/motor1/set_joint_state" to="/wheels_left/motor1/set_joint_state"/>
+        <remap from="/odrive_driver/wheels_right/motor0/joint_state" to="/wheels_right/motor0/joint_state"/>
+        <remap from="/odrive_driver/wheels_right/motor0/set_joint_state" to="/wheels_right/motor0/set_joint_state"/>
+        <remap from="/odrive_driver/wheels_right/motor1/joint_state" to="/wheels_right/motor1/joint_state"/>
+        <remap from="/odrive_driver/wheels_right/motor1/set_joint_state" to="/wheels_right/motor1/set_joint_state"/>
+    </node>
+</launch>

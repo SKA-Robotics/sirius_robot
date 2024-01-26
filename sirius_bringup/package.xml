@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>sirius_bringup</name>
+  <version>1.0.0</version>
+  <description>Hardware interfaces configuration and launch files for starting the robot</description>
+  <maintainer email="gabriel@gabrielb.dev">Gabriel Brzeziński</maintainer>
+
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <exec_depend>sirius_control</exec_depend>
+  <exec_depend>sirius_description</exec_depend>
+  <exec_depend>sirius_odrive_driver</exec_depend>
+
+</package>
