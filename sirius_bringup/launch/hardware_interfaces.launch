@@ -6,14 +6,21 @@
 
     <node name="sirius_control" pkg="sirius_control" type="sirius_control" output="screen"/>
 
-    <node name="odrive_driver" pkg="odrive_driver" type="driver.py" output="screen">
-        <remap from="/odrive_driver/wheels_left/motor0/joint_state" to="/wheels_left/motor0/joint_state"/>
-        <remap from="/odrive_driver/wheels_left/motor0/set_joint_state" to="/wheels_left/motor0/set_joint_state"/>
-        <remap from="/odrive_driver/wheels_left/motor1/joint_state" to="/wheels_left/motor1/joint_state"/>
-        <remap from="/odrive_driver/wheels_left/motor1/set_joint_state" to="/wheels_left/motor1/set_joint_state"/>
-        <remap from="/odrive_driver/wheels_right/motor0/joint_state" to="/wheels_right/motor0/joint_state"/>
-        <remap from="/odrive_driver/wheels_right/motor0/set_joint_state" to="/wheels_right/motor0/set_joint_state"/>
-        <remap from="/odrive_driver/wheels_right/motor1/joint_state" to="/wheels_right/motor1/joint_state"/>
-        <remap from="/odrive_driver/wheels_right/motor1/set_joint_state" to="/wheels_right/motor1/set_joint_state"/>
+    <node name="odrive_driver" pkg="sirius_odrive_driver" type="driver.py" output="screen" respawn="true">
+        <remap from="/driver_raw/wheels_left/motor0/joint_state" to="/wheels_left/motor0/joint_state"/>
+        <remap from="/driver_raw/wheels_left/motor1/joint_state" to="/wheels_left/motor1/joint_state"/>
+        <remap from="/driver_raw/wheels_right/motor0/joint_state" to="/wheels_right/motor0/joint_state"/>
+        <remap from="/driver_raw/wheels_right/motor1/joint_state" to="/wheels_right/motor1/joint_state"/>
     </node>
+    <node name="relaxing_middleware" pkg="sirius_odrive_driver" type="relaxing_middleware.py" output="screen">
+        <remap from="/driver/wheels_left/motor0/set_joint_state" to="/wheels_left/motor0/set_joint_state"/>
+        <remap from="/driver/wheels_left/motor1/set_joint_state" to="/wheels_left/motor1/set_joint_state"/>
+        <remap from="/driver/wheels_right/motor0/set_joint_state" to="/wheels_right/motor0/set_joint_state"/>
+        <remap from="/driver/wheels_right/motor1/set_joint_state" to="/wheels_right/motor1/set_joint_state"/>
+    </node>
+
+    <rosparam file="$(find manip_control)/config/roboclaws.yaml" command="load"/> 
+    <node name="roboclaw_driver" pkg="sirius_roboclaw_driver" type="all.py" output="screen">
+    </node>
+    <include file="$(find manip_control)/launch/manip_control.launch"/>
 </launch>

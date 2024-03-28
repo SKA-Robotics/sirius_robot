@@ -15,15 +15,27 @@ odrive_driver:
     serial_number: '208536885753'
     motor0: 
       reverse_motor: True
+      reverse_effort: True
       transmission: 43
     motor1: 
       reverse_motor: True
+      reverse_effort: False
       transmission: 43  
   wheels_right: 
     serial_number: '306A36543431'
     motor0: 
       reverse_motor: False
+      reverse_effort: False
       transmission: 43
     motor1:
       reverse_motor: False
+      reverse_effort: False
       transmission: 43
+relaxing_middleware:
+  joints: 
+    - /wheels_left/motor0
+    - /wheels_left/motor1
+    - /wheels_right/motor0
+    - /wheels_right/motor1
+  relax_time: 2.0
+  lock_threshold: 0.0625

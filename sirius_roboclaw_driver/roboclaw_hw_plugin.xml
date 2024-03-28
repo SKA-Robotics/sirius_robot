@@ -1,0 +1,7 @@
+<library path="lib/libroboclaw_hardware_interfaces">
+  <class name="roboclaw/RoboclawHWInterface" type="roboclaw::RoboclawHWInterface" base_class_type="hardware_interface::RobotHW">
+    <description>
+      Interface for roboclaw motors
+    </description>
+  </class>
+</library>
