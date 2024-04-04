@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  humble:
+    container_name: humble
+    image: ros:humble
+    volumes:
+      - ../../../../:/home/rover/software/ros2/
+
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/shadow:/etc/shadow:ro
+      - /etc/group:/etc/group:ro
+      - /etc/sudoers:/etc/sudoers
+    user: 1000:1000
+    command: tail -F /dev/null
+    network_mode: "host"        
+    environment:
+      - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+
+
+  ros1_bridge:
+    container_name: ros1_bridge
+    image: osrf/ros:foxy-ros1-bridge
+    command: ros2 run ros1_bridge dynamic_bridge
+    network_mode: "host"
+    environment:
+      - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
