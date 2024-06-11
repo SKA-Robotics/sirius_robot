@@ -23,4 +23,5 @@
     <node name="roboclaw_driver" pkg="sirius_roboclaw_driver" type="all.py" output="screen">
     </node>
     <include file="$(find manip_control)/launch/manip_control.launch"/>
+    <include file="$(find canbus_modules)/launch/all.launch" />
 </launch>
