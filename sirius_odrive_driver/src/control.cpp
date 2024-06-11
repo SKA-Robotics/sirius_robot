@@ -5,6 +5,7 @@ namespace sirius
 {
 bool OdriveHWInterface::init(ros::NodeHandle& root_nh, ros::NodeHandle& robot_hw_nh)
 {
+  ROS_WARN("THE NODE HAS STARTED");
   if (robot_hw_nh.hasParam("motor0"))
   {
     robot_hw_nh.getParam("motor0", motor0);
@@ -28,13 +29,13 @@ bool OdriveHWInterface::init(ros::NodeHandle& root_nh, ros::NodeHandle& robot_hw
     {
       joint = motor0;
       publisher[motor].init(robot_hw_nh, "motor0/set_joint_state", 1);
-      robot_hw_nh.subscribe("motor0/joint_state", 1, &OdriveHWInterface::motor0_callback, this);
+      subscriber[motor] = robot_hw_nh.subscribe("motor0/joint_state", 1, &OdriveHWInterface::motor0_callback, this);
     }
     else
     {
       joint = motor1;
       publisher[motor].init(robot_hw_nh, "motor1/set_joint_state", 1);
-      robot_hw_nh.subscribe("motor1/joint_state", 1, &OdriveHWInterface::motor1_callback, this);
+      subscriber[motor] = robot_hw_nh.subscribe("motor1/joint_state", 1, &OdriveHWInterface::motor1_callback, this);
     }
 
     joint_state[motor].position.resize(1);
@@ -62,11 +63,15 @@ bool OdriveHWInterface::init(ros::NodeHandle& root_nh, ros::NodeHandle& robot_hw
 
 void OdriveHWInterface::motor0_callback(const sensor_msgs::JointState::ConstPtr& msg)
 {
-  joint_state[0] = *msg;
+  joint_state[0].position[0] = msg->position[0];
+  joint_state[0].velocity[0] = msg->velocity[0];
+  joint_state[0].effort[0] = msg->effort[0];
 };
 void OdriveHWInterface::motor1_callback(const sensor_msgs::JointState::ConstPtr& msg)
 {
-  joint_state[number_of_motors - 1] = *msg;
+  joint_state[number_of_motors - 1].position[0] = msg->position[0];
+  joint_state[number_of_motors - 1].velocity[0] = msg->velocity[0];
+  joint_state[number_of_motors - 1].effort[0] = msg->effort[0];
 };
 void OdriveHWInterface::read(const ros::Time& /*time*/, const ros::Duration& /*period*/){};
 void OdriveHWInterface::write(const ros::Time& time, const ros::Duration& /*period*/)
