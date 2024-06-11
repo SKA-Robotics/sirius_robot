@@ -1,0 +1,9 @@
+float64 battery_voltage
+float64 battery_percentage
+
+float64 total_current
+float64 motor_current
+float64 computer_current
+float64 peripheral_current
+
+float64 total_power

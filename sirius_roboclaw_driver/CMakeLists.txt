@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.16.3...3.28.1)
-project(sirius_odrive_driver)
+cmake_minimum_required(VERSION 3.0.2)
+project(sirius_roboclaw_driver)
 
 find_package(
   catkin REQUIRED
@@ -7,7 +7,10 @@ find_package(
              hardware_interface
              realtime_tools
              roscpp
-             rospy)
+             rospy
+             sirius_msgs)
+
+catkin_python_setup()
 
 catkin_package(
   CATKIN_DEPENDS
@@ -15,17 +18,18 @@ catkin_package(
   hardware_interface
   realtime_tools
   roscpp
-  rospy)
+  rospy
+  sirius_msgs)
 
 include_directories(include/ ${catkin_INCLUDE_DIRS})
 
-add_library(sirius_odrive_hardware_interfaces src/control.cpp)
-target_link_libraries(sirius_odrive_hardware_interfaces ${catkin_LIBRARIES})
+add_library(roboclaw_hardware_interfaces src/control.cpp)
+target_link_libraries(roboclaw_hardware_interfaces ${catkin_LIBRARIES})
 
 catkin_install_python(
   PROGRAMS
   scripts/driver.py
-  scripts/relaxing_middleware.py
+  scripts/all.py
   DESTINATION
   ${CATKIN_PACKAGE_BIN_DESTINATION})
-install(FILES odrive_hw_plugin.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+install(FILES roboclaw_hw_plugin.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

@@ -5,4 +5,7 @@
     <include file="$(find sirius_description)/launch/sirius_description.launch" pass_all_args="true" />
     <include file="$(find sirius_bringup)/launch/hardware_interfaces.launch" />
     <include file="$(find sirius_control)/launch/controllers.launch" />
+    <include file="$(find sirius_bringup)/launch/web_interface.launch" />
+    <!-- TODO: include localization -->
+    <!-- TODO: include autonomy -->
 </launch>

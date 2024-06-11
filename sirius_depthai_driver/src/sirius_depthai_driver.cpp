@@ -332,10 +332,10 @@ int main(int argc, char** argv)
   auto device = connect(nh, pipeline, mxId);
   auto calibrationHandler = device->readCalibration();
 
-  dai::rosBridge::ImageConverter converter(tf + "_left_camera_optical_frame", true);
-  dai::rosBridge::ImageConverter rightconverter(tf + "_right_camera_optical_frame", true);
-  dai::rosBridge::ImageConverter rgbConverter(tf + "_rgb_camera_optical_frame", false);
-  dai::rosBridge::ImuConverter imuConverter(tf + "_imu_frame", dai::ros::ImuSyncMethod::COPY, linearAccelCovariance,
+  dai::rosBridge::ImageConverter converter(tf + "_left_camera_optical", true);
+  dai::rosBridge::ImageConverter rightconverter(tf + "_right_camera_optical", true);
+  dai::rosBridge::ImageConverter rgbConverter(tf + "_rgb_camera_optical", false);
+  dai::rosBridge::ImuConverter imuConverter(tf + "_imu_link", dai::ros::ImuSyncMethod::COPY, linearAccelCovariance,
                                             angularVelCovariance, rotationCovariance, magneticCovariance, true);
 
   auto leftCameraInfo =
@@ -393,7 +393,7 @@ int main(int argc, char** argv)
                   &rgbConverter,  // since the converter has the same frame name
                                   // and image type is also same we can reuse it
                   std::placeholders::_1, std::placeholders::_2),
-        30, rgbCameraInfo, "depth");
+        30, rgbCameraInfo, "depth_registered");
   }
   else
   {
@@ -404,7 +404,7 @@ int main(int argc, char** argv)
         depthQueue, nh, std::string("depth_registered/image_raw"),
         std::bind(&dai::rosBridge::ImageConverter::toRosMsg, &rgbConverter, std::placeholders::_1,
                   std::placeholders::_2),
-        30, rgb_camera_param_uri, "depth");
+        30, rgb_camera_param_uri, "depth_registered");
   }
 
   ros::Publisher rosImuPub;

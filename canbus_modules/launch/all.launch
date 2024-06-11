@@ -1,0 +1,17 @@
+<launch>
+<!--
+	<node name="power_measurement" pkg="canbus_modules" type="power_measurement.py" output="screen">
+		<rosparam file="$(find canbus_modules)/config/power_measurement.yaml" command="load"/>
+	</node>
+-->
+
+	<node name="gripper" pkg="canbus_modules" type="gripper.py" output="screen">
+		<rosparam file="$(find canbus_modules)/config/gripper.yaml" command="load"/>
+	</node>
+
+    <node name="socketcan_bridge" pkg="socketcan_bridge" type="socketcan_bridge_node" output="screen">
+		<param name="can_device" value="slcan0"/>
+        <remap from="/sent_messages" to="/sent_canbus_messages"/>
+        <remap from="/received_messages" to="/received_canbus_messages"/>
+    </node>
+</launch>

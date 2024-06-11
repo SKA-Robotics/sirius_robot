@@ -1,0 +1,8 @@
+device_id: 0x31
+
+open_pwm: 1952
+open_angle: 90
+close_pwm: 1024
+close_angle: 0
+max_angle: 90
+min_angle: -10

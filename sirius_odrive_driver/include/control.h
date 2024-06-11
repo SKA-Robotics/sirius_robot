@@ -8,6 +8,7 @@
 #include <hardware_interface/joint_command_interface.h>
 #include <realtime_tools/realtime_publisher.h>
 #include <pluginlib/class_list_macros.hpp>
+#include "ros/subscriber.h"
 
 #include <sensor_msgs/JointState.h>
 
@@ -30,6 +31,7 @@ protected:
   int number_of_motors;
   std::vector<int> odrive_motors;
   realtime_tools::RealtimePublisher<sensor_msgs::JointState> publisher[2];
+  ros::Subscriber subscriber[2];
   std::vector<sensor_msgs::JointState> joint_state;
   std::vector<double> target_velocity;
   void motor0_callback(const sensor_msgs::JointState::ConstPtr& msg);

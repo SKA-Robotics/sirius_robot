@@ -4,7 +4,7 @@
     <arg name="enableRviz"            default="true"/>
 
     <arg name="mxId"                 default="19443010B1B2F51200"/>
-    <arg name="tf"         default="front_camera" />
+    <arg name="tf"         default="front" />
     <arg name="imu_rate"         default="200" />
     <arg name="magnetometer_rate"         default="100" />
     <arg name="fps"            default="20"  />
@@ -61,9 +61,8 @@
         <remap from="depth_registered/image_rect" to="/$(arg name)/depth_registered/image"/>    
         <remap from="depth_registered/points" to="/$(arg name)/point_cloud/cloud_registered"/>
     </node>
-
     <node pkg="imu_transformer" type="imu_transformer_node" name="imu_data_transformer" output="screen">
-        <remap from="imu_in/data" to="/$(arg imu_name)/imu/data"/>
+        <remap from="imu_in/data" to="/$(arg name)/imu/data"/>
         <remap from="imu_out/data" to="/imu_compensated/data"/>
         <param name="target_frame" value="base_link"/>
     </node>
