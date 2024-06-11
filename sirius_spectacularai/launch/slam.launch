@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="sirius_spectacularai" type="slam.py" name="slam">
+  </node>
+</launch>
