@@ -1,4 +1,5 @@
 <launch>
   <node pkg="sirius_spectacularai" type="slam.py" name="slam">
   </node>
+  <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 1 map slam 100" />
 </launch>
