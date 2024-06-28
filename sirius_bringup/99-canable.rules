@@ -1,0 +1,1 @@
+SUBSYSTEM=="tty", ACTION=="add", ATTRS{idVendor}=="16d0", ATTRS{idProduct}=="117e", SYMLINK+="canable"
