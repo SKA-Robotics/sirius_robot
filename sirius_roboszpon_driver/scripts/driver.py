@@ -61,9 +61,6 @@ class Joint:
 
     def process_frame(self, frame: Frame):
         msg = self.interface.decode_message(frame.id, frame.data)
-        if msg["message_id"] != roboszpon_interface.MSG_STATUS_REPORT:
-            # pprint(msg)
-            pass
 
         if msg["message_id"] == roboszpon_interface.MSG_STATUS_REPORT:
             self.last_update_time = rospy.get_time()
@@ -84,7 +81,6 @@ class Joint:
             self.interface.arm()
 
         if rospy.get_time() - self.last_update_time > 0.5:
-            print("TIMEOUT")
             self.mode = "TIMEOUT"
             self.reset_readings()
 
@@ -102,6 +98,15 @@ class Joint:
             }
         )
 
+    def set_position(self, position):
+        self.interface.send_position_command(position)
+
+    def set_velocity(self, velocity):
+        self.interface.send_velocity_command(velocity)
+
+    def set_effort(self, effort):
+        self.interface.send_duty_command(effort)
+
     def disable(self):
         self.interface.disarm()
 
@@ -111,15 +116,18 @@ class Node:
         rospy.init_node(name, anonymous=True)
 
         self.rate = rospy.Rate(5)
-        self.joints = []
+        self.joints = {}
 
         rospy.on_shutdown(self.disable)
         joint_list = rospy.get_param(f"~joints").keys()
         for joint in joint_list:
-            self.joints.append(Joint(f"{joint}"))
+            self.joints[joint] = Joint(f"{joint}")
 
         self.frame_subscriber = rospy.Subscriber(
             "/received_canbus_messages", Frame, self.receive_raw_frame
+        )
+        self.command_subscriber = rospy.Subscriber(
+            "/set_joint_states", JointState, self.receive_command
         )
         self.joint_state_publisher = rospy.Publisher(
             "/joint_states", JointState, queue_size=10
@@ -127,9 +135,27 @@ class Node:
 
     def receive_raw_frame(self, frame: Frame):
         node_id = (frame.id >> 6) & 0b11111
-        for joint in self.joints:
+        for joint in self.joints.values():
             if node_id == joint.node_id:
                 joint.process_frame(frame)
+
+    def receive_command(self, msg: JointState):
+        for i, joint in enumerate(msg.name):
+            if joint not in self.joints.keys():
+                rospy.logwarn(
+                    f"Recieved joint_state command for unsupported joint: {joint}"
+                )
+                continue
+
+            if self.joints[joint].mode != "RUNNING":
+                continue
+
+            if len(msg.position) == len(msg.name):
+                self.joints[joint].set_position(msg.position[i])
+            if len(msg.velocity) == len(msg.name):
+                self.joints[joint].set_velocity(msg.velocity[i])
+            if len(msg.effort) == len(msg.name):
+                self.joints[joint].set_effort(msg.effort[i])
 
     def run(self):
         while not rospy.is_shutdown():
@@ -137,13 +163,13 @@ class Node:
             self.rate.sleep()
 
     def step(self):
-        for joint in self.joints:
+        for joint in self.joints.values():
             joint.step()
 
         msg = JointState()
         msg.header = Header()
         msg.header.stamp = rospy.Time.now()
-        for joint in self.joints:
+        for joint in self.joints.values():
             if joint.are_readings_valid():
                 msg.name.append(joint.name)
                 msg.position.append(joint.position * 2 * pi)
@@ -153,7 +179,7 @@ class Node:
         self.joint_state_publisher.publish(msg)
 
     def disable(self):
-        for joint in self.joints:
+        for joint in self.joints.values():
             joint.disable()
 
 

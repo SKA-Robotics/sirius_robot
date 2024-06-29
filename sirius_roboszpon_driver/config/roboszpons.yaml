@@ -1,4 +1,12 @@
 roboszpon_driver:
   joints:
-    base:
+    base_cyl:
       node_id: 2
+    cyl_arm1:
+      node_id: 3
+    arm1_arm2:
+      node_id: 4
+    arm2_arm3:
+      node_id: 5
+    arm3_tool:
+      node_id: 6
