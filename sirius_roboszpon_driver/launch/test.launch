@@ -1,0 +1,10 @@
+<launch>
+    <rosparam file="$(find sirius_roboszpon_driver)/config/roboszpons.yaml" command="load"/> 
+    <node name="roboszpon_driver" pkg="sirius_roboszpon_driver" type="driver.py" output="screen"></node>
+
+    <node name="socketcan_bridge" pkg="socketcan_bridge" type="socketcan_bridge_node" output="screen">
+		<param name="can_device" value="can0"/>
+        <remap from="/sent_messages" to="/sent_canbus_messages"/>
+        <remap from="/received_messages" to="/received_canbus_messages"/>
+    </node>
+</launch>

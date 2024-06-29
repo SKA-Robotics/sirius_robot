@@ -1,0 +1,4 @@
+roboszpon_driver:
+  joints:
+    base:
+      node_id: 2
