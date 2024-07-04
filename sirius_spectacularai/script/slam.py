@@ -71,6 +71,7 @@ class SLAMNode:
     def newOdometryFrame(self, vioOutput):
         msg = to_odometry_message(vioOutput)
         msg = transform_odometry_child_frame(msg, "base_link", self.tf_buffer)
+        msg.header.frame_id = "map"
         self.odometry_publisher.publish(msg)
 
     def newPointCloud(self, keyframe):

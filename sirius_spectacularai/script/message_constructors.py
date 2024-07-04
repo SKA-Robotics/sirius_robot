@@ -22,7 +22,7 @@ def to_pose_message(cameraPose):
 def to_odometry_message(vioOutput):
     msg = Odometry()
     msg.header.stamp = rospy.Time.now()
-    msg.header.frame_id = "map"
+    msg.header.frame_id = "odom"
     msg.child_frame_id = "front_rgb_camera_optical"
 
     pose = vioOutput.pose
