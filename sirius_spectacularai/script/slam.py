@@ -7,7 +7,7 @@ import numpy as np
 import tf2_ros
 from nav_msgs.msg import Odometry
 from cv_bridge import CvBridge
-from sensor_msgs.msg import PointCloud2, PointField, CameraInfo, Image
+from sensor_msgs.msg import PointCloud2, PointField, CameraInfo, Image, NavSatFix
 
 from message_constructors import to_camera_info_message, to_odometry_message, to_pose_message
 from transforms import transform_odometry_child_frame
@@ -30,11 +30,23 @@ class SLAMNode:
         self.camera_info_publisher = rospy.Publisher("/slam/camera_info",
                                                      CameraInfo,
                                                      queue_size=10)
+        self.gps_subscriber = rospy.Subscriber('/gps/fix', NavSatFix,
+                                               self.gps_fix_callback)
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
 
         self.bridge = CvBridge()
         self.keyframes = {}
+
+        self.session = None
+
+    def gps_fix_callback(self, msg: NavSatFix):
+        if self.session is not None:
+            coordinates = spectacularAI.WgsCoordinates()
+            coordinates.altitude = msg.altitude
+            coordinates.latitude = msg.latitude
+            coordinates.longitude = msg.longitude
+            self.session.addGnss(coordinates, msg.position_covariance)
 
     def has_keyframe(self, frame_id):
         return frame_id in self.keyframes
@@ -129,8 +141,8 @@ if __name__ == '__main__':
             # Check that point cloud exists
             if not keyFrame.pointCloud: continue
 
-            if not slam_node.has_keyframe(frame_id):
-                slam_node.newKeyFrame(frame_id, keyFrame)
+            #if not slam_node.has_keyframe(frame_id):
+            slam_node.newKeyFrame(frame_id, keyFrame)
 
         if output.finalMap:
             print("Final map ready!")
@@ -141,11 +153,14 @@ if __name__ == '__main__':
     config.internalParameters = configInternal
     config.useSlam = True
     #config.useColor = True
+    print(config.imuToGnss)
 
     vioPipeline = spectacularAI.depthai.Pipeline(pipeline, config,
                                                  onMappingOutput)
 
-    with depthai.Device(pipeline) as device, \
-        vioPipeline.startSession(device) as vio_session:
+    with depthai.Device(pipeline) as device, vioPipeline.startSession(
+            device) as vio_session:
+
+        slam_node.session = vio_session
         while not rospy.is_shutdown():
             onVioOutput(vio_session.waitForOutput())
