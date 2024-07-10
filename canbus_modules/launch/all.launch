@@ -5,8 +5,12 @@
 	</node>
 -->
 
-	<node name="gripper" pkg="canbus_modules" type="gripper.py" output="screen">
+	<!-- <node name="gripper" pkg="canbus_modules" type="gripper.py" output="screen">
 		<rosparam file="$(find canbus_modules)/config/gripper.yaml" command="load"/>
+	</node> -->
+	
+	<node name="lamps" pkg="canbus_modules" type="lamps.py" output="screen">
+		<rosparam file="$(find canbus_modules)/config/lamps.yaml" command="load"/>
 	</node>
 
     <node name="socketcan_bridge" pkg="socketcan_bridge" type="socketcan_bridge_node" output="screen">
