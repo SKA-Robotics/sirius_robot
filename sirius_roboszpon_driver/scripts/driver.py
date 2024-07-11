@@ -9,12 +9,13 @@ from math import pi
 
 
 class RosRoboszponInterface(roboszpon_interface.RoboszponInterface):
+
     def __init__(self, node_id):
         super().__init__(node_id)
 
-        self.frame_publisher = rospy.Publisher(
-            "/sent_canbus_messages", Frame, queue_size=10
-        )
+        self.frame_publisher = rospy.Publisher("/sent_canbus_messages",
+                                               Frame,
+                                               queue_size=10)
 
     def send_can_frame(self, frame_id, data):
         frame = Frame()
@@ -27,6 +28,7 @@ class RosRoboszponInterface(roboszpon_interface.RoboszponInterface):
 
 
 class Joint:
+
     def __init__(self, name) -> None:
         self.name = name
         self.node_id = rospy.get_param(f"~joints/{name}/node_id")
@@ -49,11 +51,11 @@ class Joint:
             return False
 
         if None in [
-            self.temperature,
-            self.position,
-            self.velocity,
-            self.current,
-            self.duty,
+                self.temperature,
+                self.position,
+                self.velocity,
+                self.current,
+                self.duty,
         ]:
             return False
 
@@ -83,20 +85,19 @@ class Joint:
         if rospy.get_time() - self.last_update_time > 0.5:
             self.mode = "TIMEOUT"
             self.reset_readings()
-
-        print(
-            {
-                "name": self.name,
-                "id": self.node_id,
-                "mode": self.mode,
-                "flags": self.flags,
-                "temperature": self.temperature,
-                "position": self.position,
-                "velocity": self.velocity,
-                "current": self.current,
-                "duty": self.duty,
-            }
-        )
+        """
+        print({
+            "name": self.name,
+            "id": self.node_id,
+            "mode": self.mode,
+            "flags": self.flags,
+            "temperature": self.temperature,
+            "position": self.position,
+            "velocity": self.velocity,
+            "current": self.current,
+            "duty": self.duty,
+        })
+        """
 
     def set_position(self, position):
         self.interface.send_position_command(position)
@@ -112,6 +113,7 @@ class Joint:
 
 
 class Node:
+
     def __init__(self, name) -> None:
         rospy.init_node(name, anonymous=True)
 
@@ -123,18 +125,17 @@ class Node:
         for joint in joint_list:
             self.joints[joint] = Joint(f"{joint}")
 
-        self.frame_subscriber = rospy.Subscriber(
-            "/received_canbus_messages", Frame, self.receive_raw_frame
-        )
-        self.command_subscriber = rospy.Subscriber(
-            "/set_joint_states", JointState, self.receive_command
-        )
-        self.joint_state_publisher = rospy.Publisher(
-            "/joint_states", JointState, queue_size=10
-        )
+        self.frame_subscriber = rospy.Subscriber("/received_canbus_messages",
+                                                 Frame, self.receive_raw_frame)
+        self.command_subscriber = rospy.Subscriber("/set_joint_states",
+                                                   JointState,
+                                                   self.receive_command)
+        self.joint_state_publisher = rospy.Publisher("/joint_states",
+                                                     JointState,
+                                                     queue_size=10)
 
     def receive_raw_frame(self, frame: Frame):
-        node_id = (frame.id >> 6) & 0b11111
+        node_id = (frame.id >> 5) & 0b111111
         for joint in self.joints.values():
             if node_id == joint.node_id:
                 joint.process_frame(frame)

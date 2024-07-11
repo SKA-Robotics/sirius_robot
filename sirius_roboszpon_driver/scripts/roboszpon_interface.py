@@ -80,6 +80,7 @@ ROBOSZPON_FLAGS = {
 
 
 class RoboszponInterface(ABC):
+
     def __init__(self, node_id):
         self.node_id = node_id
 
@@ -88,7 +89,7 @@ class RoboszponInterface(ABC):
         pass
 
     def build_frame_id(self, message_id):
-        return ((self.node_id & 0b11111) << 6) + (message_id & 0b111111)
+        return ((self.node_id & 0b111111) << 5) + (message_id & 0b11111)
 
     def float_to_bits(self, value):
         value_bits = struct.pack("f", value)
@@ -99,8 +100,8 @@ class RoboszponInterface(ABC):
         return struct.unpack("f", value_bits)[0]
 
     def decode_message(self, frame_id, data):
-        node_id = (frame_id >> 6) & 0b11111
-        message_id = frame_id & 0b111111
+        node_id = (frame_id >> 5) & 0b111111
+        message_id = frame_id & 0b11111
         data = int.from_bytes(data, "big")
 
         if message_id == MSG_STATUS_REPORT:
@@ -150,7 +151,8 @@ class RoboszponInterface(ABC):
         return {"node_id": node_id, "message_id": message_id, "data": data}
 
     def send_action_request(self, action_id):
-        return self.send_can_frame(self.build_frame_id(MSG_ACTION_REQUEST), action_id)
+        return self.send_can_frame(self.build_frame_id(MSG_ACTION_REQUEST),
+                                   action_id)
 
     def arm(self):
         return self.send_action_request(ACTION_ARM)
@@ -160,9 +162,9 @@ class RoboszponInterface(ABC):
 
     def send_motor_command(self, motor_command_type, command):
         data = ((motor_command_type & 0xFF) << 56) + (
-            (self.float_to_bits(command) & 0xFFFFFFFF) << 24
-        )
-        return self.send_can_frame(self.build_frame_id(MSG_MOTOR_COMMAND), data)
+            (self.float_to_bits(command) & 0xFFFFFFFF) << 24)
+        return self.send_can_frame(self.build_frame_id(MSG_MOTOR_COMMAND),
+                                   data)
 
     def send_duty_command(self, command):
         return self.send_motor_command(0, command)
@@ -178,11 +180,10 @@ class RoboszponInterface(ABC):
 
     def send_parameter_write(self, parameter_id, value):
         data = ((parameter_id & 0xFF) << 56) + (
-            (self.float_to_bits(value) & 0xFFFFFFFF) << 24
-        )
-        return self.send_can_frame(self.build_frame_id(MSG_PARAMETER_WRITE), data)
+            (self.float_to_bits(value) & 0xFFFFFFFF) << 24)
+        return self.send_can_frame(self.build_frame_id(MSG_PARAMETER_WRITE),
+                                   data)
 
     def send_parameter_read(self, parameter_id):
-        return self.send_can_frame(
-            self.build_frame_id(MSG_PARAMETER_READ), parameter_id
-        )
+        return self.send_can_frame(self.build_frame_id(MSG_PARAMETER_READ),
+                                   parameter_id)
