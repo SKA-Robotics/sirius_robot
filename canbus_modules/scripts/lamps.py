@@ -9,6 +9,7 @@ from joystick_control.msg import Topic
 
 JOY_MULTIPLEXER_TOPIC = "/joy_multiplexer/selected_output"
 RELAXING_MIDDLEWARE_TOPIC = "/relaxing_middleware/state"
+KLAKSON_TOPIC = "/klakson/cmd"
 
 
 class LampsCanbus(CanbusInterface):
@@ -36,7 +37,10 @@ class LampsCanbus(CanbusInterface):
             self.receive_relaxing_middleware_state,
             queue_size=10)
 
-        self.rate = rospy.Rate(1.0)
+        self.klakson_subscriber = rospy.Subscriber(
+            KLAKSON_TOPIC, String, self.receive_klakson_command, queue_size=10)
+
+        self.rate = rospy.Rate(0.7)
 
     def run(self) -> None:
         while not rospy.is_shutdown():
@@ -56,7 +60,7 @@ class LampsCanbus(CanbusInterface):
         if msg.name == "__none":
             self.lamp_state["green"] = 0
             self.lamp_state["yellow"] = 0
-        elif msg.name == "joy_diff_drive":
+        elif msg.name == "joy_diff_drive" or msg.name == "joy_5dof_manipulator":
             self.lamp_state["green"] = 0
             self.lamp_state["yellow"] = 1
         elif msg.name == "autonomy":
@@ -69,6 +73,13 @@ class LampsCanbus(CanbusInterface):
             self.lamp_state["blue"] = 0
         else:
             self.lamp_state["blue"] = 1
+        self.send_lamp_command()
+
+    def receive_klakson_command(self, msg):
+        if msg.data == "off":
+            self.lamp_state["buzzer"] = 0
+        else:
+            self.lamp_state["buzzer"] = 1
         self.send_lamp_command()
 
     def receive_frame(self, command_id, data, frame: Frame):

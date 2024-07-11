@@ -39,14 +39,43 @@ class SLAMNode:
         self.keyframes = {}
 
         self.session = None
+        self.device = None
+
+        self.start_time = rospy.Time.now()
+
+    def computeGPSTimeOffset(self):
+        imu_queue = self.device.getOutputQueue(name="spectacularAI_imu",
+                                               maxSize=1,
+                                               blocking=True)
+        imu_data = imu_queue.get()
+        acc = imu_data.packets[0].acceleroMeter
+        ts_device = acc.getTimestampDevice().total_seconds()
+
+        return ts_device - 3
 
     def gps_fix_callback(self, msg: NavSatFix):
         if self.session is not None:
+            position_covariance = [
+                [a / 1000 for a in msg.position_covariance[0:3]],
+                [a / 1000 for a in msg.position_covariance[3:6]],
+                [a / 1000 for a in msg.position_covariance[6:9]],
+            ]
+
+            position_covariance = [
+                [1, 0, 0],
+                [0, 1, 0],
+                [0, 0, 5],
+            ]
+
             coordinates = spectacularAI.WgsCoordinates()
             coordinates.altitude = msg.altitude
             coordinates.latitude = msg.latitude
             coordinates.longitude = msg.longitude
-            self.session.addGnss(coordinates, msg.position_covariance)
+            rospy.loginfo(
+                f"{self.computeGPSTimeOffset()} {coordinates.latitude} {coordinates.longitude}"
+            )
+            self.session.addGnss(self.computeGPSTimeOffset(), coordinates,
+                                 position_covariance)
 
     def has_keyframe(self, frame_id):
         return frame_id in self.keyframes
@@ -141,8 +170,8 @@ if __name__ == '__main__':
             # Check that point cloud exists
             if not keyFrame.pointCloud: continue
 
-            #if not slam_node.has_keyframe(frame_id):
-            slam_node.newKeyFrame(frame_id, keyFrame)
+            if not slam_node.has_keyframe(frame_id):
+                slam_node.newKeyFrame(frame_id, keyFrame)
 
         if output.finalMap:
             print("Final map ready!")
@@ -152,15 +181,24 @@ if __name__ == '__main__':
     config = spectacularAI.depthai.Configuration()
     config.internalParameters = configInternal
     config.useSlam = True
-    #config.useColor = True
-    print(config.imuToGnss)
+    # config.useColor = True
+    # config.imuToGnss = spectacularAI.Vector3f()
 
     vioPipeline = spectacularAI.depthai.Pipeline(pipeline, config,
                                                  onMappingOutput)
 
     with depthai.Device(pipeline) as device, vioPipeline.startSession(
             device) as vio_session:
-
+        """
+        vio_session.addAbsolutePose(
+            spectacularAI.Pose.fromMatrix(1.0, [
+                [1.0, 0.0, 0.0, 0.0],
+                [0.0, 1.0, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
+            ]), 0)
+        """
+        slam_node.device = device
         slam_node.session = vio_session
         while not rospy.is_shutdown():
             onVioOutput(vio_session.waitForOutput())

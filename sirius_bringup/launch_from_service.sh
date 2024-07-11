@@ -1,6 +1,6 @@
 #!/bin/bash
 
-slcand -o -s3 -t hw -S 115200 /dev/ttyACM0
+slcand -o -s8 -t hw -S 115200 /dev/canable
 ip link set up slcan0
 
 modprobe -r uvcvideo

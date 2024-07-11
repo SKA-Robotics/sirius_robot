@@ -25,6 +25,8 @@ def to_odometry_message(vioOutput):
     msg.header.frame_id = "odom"
     msg.child_frame_id = "front_rgb_camera_optical"
 
+    rospy.loginfo(f"{vioOutput.globalPose}")
+
     pose = vioOutput.pose
     velocity = vioOutput.velocity
     angularVelocity = vioOutput.angularVelocity
