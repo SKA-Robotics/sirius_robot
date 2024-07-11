@@ -19,9 +19,12 @@
         <remap from="/driver/wheels_right/motor1/set_joint_state" to="/wheels_right/motor1/set_joint_state"/>
     </node>
 
-    <!--<rosparam file="$(find manip_control)/config/roboclaws.yaml" command="load"/> 
-    <node name="roboclaw_driver" pkg="sirius_roboclaw_driver" type="all.py" output="screen">
-    </node>-->
+    <rosparam file="$(find manip_control)/config/roboszpons.yaml" command="load"/> 
+    <node name="roboszpon_driver" pkg="sirius_roboszpon_driver" type="driver.py" output="screen">
+		<remap from="/set_joint_states" to="/manip_interface/command" />
+		<remap from="/joint_states" to="/manip_interface/state" />
+    </node>
+
     <include file="$(find manip_control)/launch/manip_control.launch"/>
     <include file="$(find canbus_modules)/launch/all.launch" />
 </launch>

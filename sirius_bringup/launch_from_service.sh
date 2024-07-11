@@ -1,7 +1,8 @@
 #!/bin/bash
 
-slcand -o -s8 -t hw -S 115200 /dev/canable
-ip link set up slcan0
+slcand -o -c -s8 /dev/canable can0
+ip link set up can0
+ip link set can0 txqueuelen 10000
 
 modprobe -r uvcvideo
 modprobe uvcvideo

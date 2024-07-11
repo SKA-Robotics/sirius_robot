@@ -14,7 +14,7 @@
 	</node>
 
     <node name="socketcan_bridge" pkg="socketcan_bridge" type="socketcan_bridge_node" output="screen">
-		<param name="can_device" value="slcan0"/>
+		<param name="can_device" value="can0"/>
         <remap from="/sent_messages" to="/sent_canbus_messages"/>
         <remap from="/received_messages" to="/received_canbus_messages"/>
     </node>
