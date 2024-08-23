@@ -85,7 +85,7 @@ class Joint:
         if rospy.get_time() - self.last_update_time > 0.5:
             self.mode = "TIMEOUT"
             self.reset_readings()
-        """
+
         print({
             "name": self.name,
             "id": self.node_id,
@@ -97,7 +97,6 @@ class Joint:
             "current": self.current,
             "duty": self.duty,
         })
-        """
 
     def set_position(self, position):
         self.interface.send_position_command(position)
@@ -152,9 +151,9 @@ class Node:
                 continue
 
             if len(msg.position) == len(msg.name):
-                self.joints[joint].set_position(msg.position[i])
+                self.joints[joint].set_position(msg.position[i] / (2 * pi))
             if len(msg.velocity) == len(msg.name):
-                self.joints[joint].set_velocity(msg.velocity[i])
+                self.joints[joint].set_velocity(msg.velocity[i] / (2 * pi))
             if len(msg.effort) == len(msg.name):
                 self.joints[joint].set_effort(msg.effort[i])
 

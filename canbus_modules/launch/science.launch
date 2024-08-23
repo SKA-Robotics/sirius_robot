@@ -1,0 +1,7 @@
+<launch>
+    <rosparam file="$(find canbus_modules)/config/science_roboszpons.yaml" command="load"/> 
+    <node name="science_roboszpon_driver" pkg="sirius_roboszpon_driver" type="driver.py" output="screen">
+        <remap from="/set_joint_states" to="/science/command" />
+        <remap from="/joint_states" to="/science/state" />
+    </node>
+</launch>

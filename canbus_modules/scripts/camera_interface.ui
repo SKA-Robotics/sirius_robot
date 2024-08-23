@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>589</width>
+    <height>343</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QWidget" name="verticalLayoutWidget_2">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>20</y>
+      <width>552</width>
+      <height>281</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <item>
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Lewa kamera maszt</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <widget class="QPushButton" name="left_camera_left_angle">
+         <property name="text">
+          <string>20* lewo</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="left_camera_front_wheels">
+         <property name="text">
+          <string>przednie koła</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="left_camera_front">
+         <property name="text">
+          <string>na wprost</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="left_camera_back">
+         <property name="text">
+          <string>tył</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="left_camera_back_wheels">
+         <property name="text">
+          <string>tylne koła</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="left_camera_right_angle">
+         <property name="text">
+          <string>20* prawo</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Środkowa kamera maszt</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QPushButton" name="middle_camera_left_angle">
+         <property name="text">
+          <string>20* lewo</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="middle_camera_left">
+         <property name="text">
+          <string>lewo</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="middle_camera_front">
+         <property name="text">
+          <string>przód</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="middle_camera_back">
+         <property name="text">
+          <string>tył</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="middle_camera_right">
+         <property name="text">
+          <string>prawo</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="middle_camera_right_angle">
+         <property name="text">
+          <string>20* prawo</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Prawa kamera maszt</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <widget class="QPushButton" name="right_camera_left_angle">
+         <property name="text">
+          <string>20* lewo</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="right_camera_front_wheels">
+         <property name="text">
+          <string>przednie koła</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="right_camera_front">
+         <property name="text">
+          <string>na wprost</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="right_camera_back">
+         <property name="text">
+          <string>tył</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="right_camera_back_wheels">
+         <property name="text">
+          <string>tylne koła</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="right_camera_right_angle">
+         <property name="text">
+          <string>20* prawo</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Kamera manipulatora</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <item>
+        <widget class="QPushButton" name="manip_camera_left_angle">
+         <property name="text">
+          <string>20* lewo</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="manip_camera_left">
+         <property name="text">
+          <string>lewo</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="manip_camera_front">
+         <property name="text">
+          <string>przód</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="manip_camera_back">
+         <property name="text">
+          <string>tył</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="manip_camera_right">
+         <property name="text">
+          <string>prawo</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="manip_camera_right_angle">
+         <property name="text">
+          <string>20* prawo</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>589</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

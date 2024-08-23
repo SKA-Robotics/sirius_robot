@@ -10,6 +10,7 @@ from joystick_control.msg import Topic
 JOY_MULTIPLEXER_TOPIC = "/joy_multiplexer/selected_output"
 RELAXING_MIDDLEWARE_TOPIC = "/relaxing_middleware/state"
 KLAKSON_TOPIC = "/klakson/cmd"
+OVERRIDE_TOPIC = "/lamps/override_color"
 
 
 class LampsCanbus(CanbusInterface):
@@ -24,6 +25,7 @@ class LampsCanbus(CanbusInterface):
             "red": 1,
             "buzzer": 0,
         }
+        self.is_color_overriden = False
 
         self.joy_multiplexer_state = rospy.Subscriber(
             JOY_MULTIPLEXER_TOPIC,
@@ -39,6 +41,12 @@ class LampsCanbus(CanbusInterface):
 
         self.klakson_subscriber = rospy.Subscriber(
             KLAKSON_TOPIC, String, self.receive_klakson_command, queue_size=10)
+
+        self.lamp_override_subscriber = rospy.Subscriber(
+            "/lamps/color_override",
+            String,
+            self.receive_lamp_override,
+            queue_size=10)
 
         self.rate = rospy.Rate(0.7)
 
@@ -57,6 +65,8 @@ class LampsCanbus(CanbusInterface):
         self.send_frame(0x0, data)
 
     def receive_joy_multiplexer_state(self, msg):
+        if self.is_color_overriden:
+            return
         if msg.name == "__none":
             self.lamp_state["green"] = 0
             self.lamp_state["yellow"] = 0
@@ -69,10 +79,21 @@ class LampsCanbus(CanbusInterface):
         self.send_lamp_command()
 
     def receive_relaxing_middleware_state(self, msg):
+        if self.is_color_overriden:
+            return
         if msg.data == "Idle":
             self.lamp_state["blue"] = 0
         else:
             self.lamp_state["blue"] = 1
+        self.send_lamp_command()
+
+    def receive_lamp_override(self, msg):
+        self.is_color_overriden = True
+        self.lamp_state["blue"] = 0
+        self.lamp_state["green"] = 0
+        self.lamp_state["red"] = 0
+        self.lamp_state["yellow"] = 0
+        self.lamp_state[msg.data] = 1
         self.send_lamp_command()
 
     def receive_klakson_command(self, msg):

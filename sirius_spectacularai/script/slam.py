@@ -8,6 +8,7 @@ import tf2_ros
 from nav_msgs.msg import Odometry
 from cv_bridge import CvBridge
 from sensor_msgs.msg import PointCloud2, PointField, CameraInfo, Image, NavSatFix
+from geometry_msgs.msg import TransformStamped
 
 from message_constructors import to_camera_info_message, to_odometry_message, to_pose_message
 from transforms import transform_odometry_child_frame
@@ -20,6 +21,8 @@ class SLAMNode:
         self.odometry_publisher = rospy.Publisher("/slam/odometry",
                                                   Odometry,
                                                   queue_size=10)
+        self.global_odometry_publisher = rospy.Publisher(
+            "/slam/global_odometry", Odometry, queue_size=10)
         self.rgb_publisher = rospy.Publisher("/slam/rgb", Image, queue_size=10)
         self.point_publisher = rospy.Publisher("/slam/pointcloud",
                                                PointCloud2,
@@ -51,7 +54,7 @@ class SLAMNode:
         acc = imu_data.packets[0].acceleroMeter
         ts_device = acc.getTimestampDevice().total_seconds()
 
-        return ts_device - 3
+        return ts_device - 0.5
 
     def gps_fix_callback(self, msg: NavSatFix):
         if self.session is not None:
@@ -110,10 +113,25 @@ class SLAMNode:
         self.depth_publisher.publish(depth_msg)
 
     def newOdometryFrame(self, vioOutput):
-        msg = to_odometry_message(vioOutput)
+        msg = to_odometry_message(vioOutput, is_global=False)
         msg = transform_odometry_child_frame(msg, "base_link", self.tf_buffer)
         msg.header.frame_id = "map"
         self.odometry_publisher.publish(msg)
+
+        br = tf2_ros.TransformBroadcaster()
+        t = TransformStamped()
+        t.header = msg.header
+        t.child_frame_id = "base_link_local"
+        t.transform.rotation = msg.pose.pose.orientation
+        t.transform.translation = msg.pose.pose.position
+        br.sendTransform(t)
+
+        msg = to_odometry_message(vioOutput, is_global=True)
+        if msg is not None:
+            msg = transform_odometry_child_frame(msg, "base_link",
+                                                 self.tf_buffer)
+            msg.header.frame_id = "map"
+            self.global_odometry_publisher.publish(msg)
 
     def newPointCloud(self, keyframe):
         camToWorld = keyframe.frameSet.rgbFrame.cameraPose.getCameraToWorldMatrix(
