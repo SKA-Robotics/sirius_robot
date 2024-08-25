@@ -1,9 +1,19 @@
-float64 battery_voltage
-float64 battery_percentage
+float64 battery1_voltage
+float64 battery1_current
+float64 battery1_energy
+float64 battery1_percentage
 
-float64 total_current
-float64 motor_current
-float64 computer_current
-float64 peripheral_current
+float64 battery2_voltage
+float64 battery2_current
+float64 battery2_energy
+float64 battery2_percentage
 
-float64 total_power
+float64 current0
+float64 current1
+float64 current2
+float64 current3
+float64 current4
+float64 current5
+float64 current6
+
+float64 canbus_current

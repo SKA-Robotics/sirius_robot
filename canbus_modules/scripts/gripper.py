@@ -14,7 +14,7 @@ class GripperCanbus(CanbusInterface):
 
     def __init__(self) -> None:
         super().__init__(rospy.get_param("~device_id", 0x31))
-        rospy.init_node("gripper_canbus")
+        rospy.init_node("gripper")
         self.force_command_subscriber = rospy.Subscriber(
             FORCE_COMMAND_TOPIC, Float32, self.receive_force_command)
         self.open_trigger_subscriber = rospy.Subscriber(
