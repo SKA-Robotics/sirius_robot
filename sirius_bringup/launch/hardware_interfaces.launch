@@ -23,6 +23,7 @@
     <node name="roboszpon_driver" pkg="sirius_roboszpon_driver" type="driver.py" output="screen">
 		<remap from="/set_joint_states" to="/manip_interface/command" />
 		<remap from="/joint_states" to="/manip_interface/state" />
+        <remap from="/roboszpon_status" to="/manip_roboszpons/status" />
     </node>
 
     <include file="$(find manip_control)/launch/manip_control.launch"/>

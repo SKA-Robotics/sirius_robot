@@ -20,5 +20,6 @@ TERM=xterm-256color tmux new-session -d -s ros -n nodes "bash -l -i -c \"source 
 TERM=xterm-256color tmux new-window -d -t ros: -n master "source /home/rover/software/ros1/devel/setup.bash; roscore; bash -i"
 TERM=xterm-256color tmux new-window -d -t ros: -n web_server "source /home/rover/.nvm/nvm.sh; cd /home/rover/robot-web-interface/server; npm run start; bash -i"
 TERM=xterm-256color tmux new-window -d -t ros: -n cameras "sleep 5; cd /home/rover/webrtc-camera-server; sudo docker compose run gstreamer-cameras; bash -i"
+TERM=xterm-256color tmux new-window -d -t ros: -n rosbag "source /home/rover/software/ros1/devel/setup.bash; cd /home/rover/logs; rosbag record -j /power_status /manip_roboszpons/status /manip_interface/state /wheels_left/motor0/joint_state /wheels_left/motor1/joint_state /wheels_right/motor0/joint_state /wheels_right/motor1/joint_state /cmd_vel; bash -i"
 
 EOF

@@ -6,6 +6,7 @@ import roboszpon_interface
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Header
 from math import pi
+from sirius_roboszpon_driver.msg import RoboszponStatus
 
 
 class RosRoboszponInterface(roboszpon_interface.RoboszponInterface):
@@ -44,9 +45,18 @@ class Joint:
         self.position = None
         self.velocity = None
         self.current = None
-        self.duty = None
+        self.duty = 0
+        """
+        self.temperature = 0
+        self.flags = []
+        self.position = 0
+        self.velocity = 0
+        self.current = 0
+        self.duty = 0
+        """
 
     def are_readings_valid(self):
+        #return True
         if self.mode != "RUNNING":
             return False
 
@@ -85,7 +95,7 @@ class Joint:
         if rospy.get_time() - self.last_update_time > 0.5:
             self.mode = "TIMEOUT"
             self.reset_readings()
-
+        """
         print({
             "name": self.name,
             "id": self.node_id,
@@ -97,6 +107,7 @@ class Joint:
             "current": self.current,
             "duty": self.duty,
         })
+        """
 
     def set_position(self, position):
         self.interface.send_position_command(position)
@@ -132,6 +143,10 @@ class Node:
         self.joint_state_publisher = rospy.Publisher("/joint_states",
                                                      JointState,
                                                      queue_size=10)
+
+        self.status_publisher = rospy.Publisher("/roboszpon_status",
+                                                RoboszponStatus,
+                                                queue_size=10)
 
     def receive_raw_frame(self, frame: Frame):
         node_id = (frame.id >> 5) & 0b111111
@@ -177,6 +192,18 @@ class Node:
                 msg.effort.append(joint.current)
 
         self.joint_state_publisher.publish(msg)
+
+        msg = RoboszponStatus()
+        msg.header = Header()
+        msg.header.stamp = rospy.Time.now()
+        for joint in self.joints.values():
+            msg.name.append(joint.name)
+            msg.mode.append(joint.mode)
+            msg.flags.append(str(joint.flags))
+            msg.temperature.append(joint.temperature)
+            msg.duty.append(joint.duty)
+
+        self.status_publisher.publish(msg)
 
     def disable(self):
         for joint in self.joints.values():
