@@ -22,7 +22,7 @@ class SentCanbusMessages(Node):
         self.my_data = 0
 
         self.send_topic = self.declare_parameter('send_topic', '/sent_canbus_messages').value
-        self.subscription = self.create_subscription(RobotStatus, '/sirius_status', self.get_robot_status, 10)
+        self.subscription = self.create_subscription(RobotStatus, '/robot_status', self.get_robot_status, 10)
         self.subscription
         self.publisher = self.create_publisher(Frame, self.send_topic, 10)
         self.my_device_id = self.get_parameter('device_id').value
@@ -43,7 +43,6 @@ class SentCanbusMessages(Node):
         msg.dlc = len(data_to_msg)
         msg.data = [int(data_to_msg[i]) if i < len(data_to_msg) else 0 for i in range(8)]
         self.publisher.publish(msg)
-        self.get_logger().info(f"Published CAN frame {data_to_msg}")
 
     def get_robot_status(self, msg):
         if msg.e_stopped.val ==TriState.FALSE and msg.mode.val == RobotMode.AUTO:
