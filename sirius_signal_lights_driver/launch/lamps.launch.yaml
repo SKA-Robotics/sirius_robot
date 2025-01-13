@@ -1,0 +1,7 @@
+launch:
+
+- node:
+    pkg: "lamps_control"
+    exec: "sent_msgs"
+    name: "sent_msgs"
+    parameters: ["$(find canbus_modules)/config/lamps.yaml"]
