@@ -3,6 +3,8 @@ from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import CameraInfo
 import spectacularAI
+import PyKDL
+import math
 
 
 def to_pose_message(cameraPose):
@@ -27,16 +29,76 @@ def to_odometry_message(vioOutput, is_global=False):
     msg.child_frame_id = "front_rgb_camera_optical"
 
     if vioOutput.globalPose is None and is_global == True:
-        #return None
-        is_global = False
+        return None
+        #is_global = False
 
     if is_global:
         datum = spectacularAI.WgsCoordinates()
-        datum.altitude = 907.476
-        datum.latitude = 39.9011333333333333
-        datum.longitude = 32.77005
+        #datum.altitude = 250
+        #datum.latitude = 50.066220965664
+        #datum.longitude = 19.91318631828
 
-        # Środek marsjardu
+        #datum.altitude = 245.226
+        #datum.latitude = 50.0662169
+        #datum.longitude = 19.913204399999998
+
+        # ITC
+        #datum.altitude = 148.824
+        #datum.longitude = 21.010336799999997
+        #datum.latitude = 52.2198959
+
+        # Loa
+        # datum.altitude = 2139.756
+        # datum.longitude = -111.6388144
+        # datum.latitude = 38.407213
+
+        # MDRS
+        datum.altitude = 1380.0
+        datum.longitude = -110.7847004
+        datum.latitude = 38.4200181
+
+
+        # WAT
+        #datum.altitude = 142.673
+        #datum.latitude = 52.2527425
+        #datum.longitude = 20.9064178
+        """
+        PUNKT 0,0
+        ==================================
+        header: 
+        seq: 899
+        stamp: 
+            secs: 1725524793
+            nsecs:    397459
+        frame_id: "gnss"
+        status: 
+        status: 0
+        service: 1
+        latitude: 50.0662169
+        longitude: 19.913204399999998
+        altitude: 245.226
+        position_covariance: [0.0064, 0.0, 0.0, 0.0, 0.0064, 0.0, 0.0, 0.0, 0.011236]
+        position_covariance_type: 2
+
+        PUNKT K2
+        ======================================
+        header: 
+        seq: 1251
+        stamp: 
+            secs: 1725525145
+            nsecs:    307394
+        frame_id: "gnss"
+        status: 
+        status: 0
+        service: 1
+        latitude: 50.066166499999994
+        longitude: 19.913472199999998
+        altitude: 244.61100000000002
+        position_covariance: [0.007568999999999999, 0.0, 0.0, 0.0, 0.007568999999999999, 0.0, 0.0, 0.0, 0.013225]
+        position_covariance_type: 2
+        """
+
+        # Środek marsjardu ARC
         # latitude: 39.9013943
         # longitude: 32.7704792
         # altitude: 907.476
@@ -53,13 +115,35 @@ def to_odometry_message(vioOutput, is_global=False):
         positionCovariance = vioOutput.positionCovariance
         velocityCovariance = vioOutput.velocityCovariance
 
-    msg.pose.pose.position.x = pose.position.x
-    msg.pose.pose.position.y = pose.position.y
-    msg.pose.pose.position.z = pose.position.z
-    msg.pose.pose.orientation.x = pose.orientation.x
-    msg.pose.pose.orientation.y = pose.orientation.y
-    msg.pose.pose.orientation.z = pose.orientation.z
-    msg.pose.pose.orientation.w = pose.orientation.w
+    #marsyard_angle = 106.340833
+    marsyard_angle = 0
+
+    if marsyard_angle != 0.0 and is_global is True:
+        frame = PyKDL.Frame(
+            PyKDL.Rotation.Quaternion(pose.orientation.x, pose.orientation.y,
+                                      pose.orientation.z, pose.orientation.w),
+            PyKDL.Vector(pose.position.x, pose.position.y, pose.position.z))
+
+        rotation = PyKDL.Rotation()
+        rotation.DoRotZ(math.pi * marsyard_angle / 180)
+        frame = PyKDL.Frame(rotation, PyKDL.Vector()) * frame
+
+        quaternion = frame.M.GetQuaternion()
+        msg.pose.pose.position.x = frame.p.x()
+        msg.pose.pose.position.y = frame.p.y()
+        msg.pose.pose.position.z = frame.p.z()
+        msg.pose.pose.orientation.x = quaternion[0]
+        msg.pose.pose.orientation.y = quaternion[1]
+        msg.pose.pose.orientation.z = quaternion[2]
+        msg.pose.pose.orientation.w = quaternion[3]
+    else:
+        msg.pose.pose.position.x = pose.position.x
+        msg.pose.pose.position.y = pose.position.y
+        msg.pose.pose.position.z = pose.position.z
+        msg.pose.pose.orientation.x = pose.orientation.x
+        msg.pose.pose.orientation.y = pose.orientation.y
+        msg.pose.pose.orientation.z = pose.orientation.z
+        msg.pose.pose.orientation.w = pose.orientation.w
 
     for i, row in enumerate(positionCovariance):
         for j, value in enumerate(row):

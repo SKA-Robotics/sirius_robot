@@ -7,22 +7,24 @@ from nav_msgs.msg import Odometry
 def transform_odometry_child_frame(msg, target_frame, tf_buffer):
     """Transform the child frame of the odom message to the target frame."""
 
-    target_pose = transform_pose_child_frame(msg.pose.pose, target_frame,
+    target_pose = transform_pose_child_frame(msg.pose, target_frame,
                                              msg.child_frame_id, tf_buffer,
                                              msg.header.stamp)
-    target_twist = transform_twist_child_frame(msg.twist.twist, target_frame,
+    target_twist = transform_twist_child_frame(msg.twist, target_frame,
                                                msg.child_frame_id, tf_buffer,
                                                msg.header.stamp)
 
     return Odometry(header=msg.header,
                     child_frame_id=target_frame,
-                    pose=PoseWithCovariance(pose=target_pose),
-                    twist=TwistWithCovariance(twist=target_twist))
+                    pose=target_pose,
+                    twist=target_twist)
 
 
-def transform_pose_child_frame(pose, target_frame, child_frame, tf_buffer,
-                               time):
+def transform_pose_child_frame(pose: PoseWithCovariance, target_frame,
+                               child_frame, tf_buffer, time):
     """Transform the child frame of the odom message to the target frame."""
+    covariance = pose.covariance
+    pose = pose.pose
 
     # Convert the pose to a PyKDL Frame
     child_to_parent_transform = PyKDL.Frame(
@@ -49,10 +51,32 @@ def transform_pose_child_frame(pose, target_frame, child_frame, tf_buffer,
      target_pose.orientation.z, target_pose.orientation.w) = \
         target_to_parent_transform.M.GetQuaternion()
 
-    return target_pose
+    target_pose_with_covariance = PoseWithCovariance()
+    target_pose_with_covariance.pose = target_pose
+    target_pose_with_covariance.covariance = [0] * 36
+    target_pose_with_covariance.covariance[0] = max(covariance[0],
+                                                    covariance[7],
+                                                    covariance[14])
+    target_pose_with_covariance.covariance[
+        7] = target_pose_with_covariance.covariance[0]
+    target_pose_with_covariance.covariance[
+        14] = target_pose_with_covariance.covariance[0]
+
+    target_pose_with_covariance.covariance[21] = max(covariance[21],
+                                                     covariance[28],
+                                                     covariance[35])
+    target_pose_with_covariance.covariance[
+        28] = target_pose_with_covariance.covariance[21]
+    target_pose_with_covariance.covariance[
+        35] = target_pose_with_covariance.covariance[21]
+
+    return target_pose_with_covariance
 
 
-def transform_twist(twist, transform):
+def transform_twist(twist: TwistWithCovariance, transform):
+    covariance = twist.covariance
+    twist = twist.twist
+
     linear_velocity = PyKDL.Vector(twist.linear.x, twist.linear.y,
                                    twist.linear.z)
     angular_velocity = PyKDL.Vector(twist.angular.x, twist.angular.y,
@@ -79,11 +103,32 @@ def transform_twist(twist, transform):
         linear_velocity + angular_velocity * translation
     target_angular_velocity = rotation * angular_velocity
 
-    return Twist(
+    target_twist = Twist(
         Vector3(target_linear_velocity[0], target_linear_velocity[1],
                 target_linear_velocity[2]),
         Vector3(target_angular_velocity[0], target_angular_velocity[1],
                 target_angular_velocity[2]))
+
+    target_twist_with_covariance = TwistWithCovariance()
+    target_twist_with_covariance.twist = target_twist
+    target_twist_with_covariance.covariance = [0] * 36
+    target_twist_with_covariance.covariance[0] = max(covariance[0],
+                                                     covariance[7],
+                                                     covariance[14])
+    target_twist_with_covariance.covariance[
+        7] = target_twist_with_covariance.covariance[0]
+    target_twist_with_covariance.covariance[
+        14] = target_twist_with_covariance.covariance[0]
+
+    target_twist_with_covariance.covariance[21] = max(covariance[21],
+                                                      covariance[28],
+                                                      covariance[35])
+    target_twist_with_covariance.covariance[
+        28] = target_twist_with_covariance.covariance[21]
+    target_twist_with_covariance.covariance[
+        35] = target_twist_with_covariance.covariance[21]
+
+    return target_twist_with_covariance
 
 
 def transform_twist_child_frame(twist, target_frame, child_frame, tf_buffer,

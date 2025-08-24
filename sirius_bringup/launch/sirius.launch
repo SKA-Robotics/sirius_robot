@@ -6,6 +6,10 @@
     <include file="$(find sirius_bringup)/launch/hardware_interfaces.launch" />
     <include file="$(find sirius_control)/launch/controllers.launch" />
     <include file="$(find sirius_bringup)/launch/web_interface.launch" />
+
+    <include file="$(find rxsio_telemetry)/launch/telemetry.launch" />
+    <!-- <include file="$(find sirius_tty_sensors)/launch/sirius_tty_sensors.launch" /> -->
+    <include file="$(find sirius_navigation)/launch/gnss.launch" />
     <!-- TODO: include localization -->
     <!-- TODO: include autonomy -->
 </launch>

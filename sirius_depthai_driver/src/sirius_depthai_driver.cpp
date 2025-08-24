@@ -99,7 +99,7 @@ auto addDepthPipeline(dai::Pipeline& pipeline, int fps, dai::node::ColorCamera::
   stereo->setRectifyEdgeFillColor(0);
   stereo->initialConfig.setLeftRightCheckThreshold(5);
   stereo->setLeftRightCheck(true);
-  stereo->setExtendedDisparity(false);
+  stereo->setExtendedDisparity(true);
   stereo->setSubpixel(true);
   stereo->setRectifyEdgeFillColor(0);
 

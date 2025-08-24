@@ -1,0 +1,48 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/rover/software/ros1/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/any_node/any_node/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/any_node/any_node_example/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/any_node/any_worker/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/elevation_mapping/elevation_mapping/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/grid_map/grid_map_core/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/grid_map/grid_map_costmap_2d/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/grid_map/grid_map_cv/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/grid_map/grid_map_demos/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/grid_map/grid_map_filters/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/grid_map/grid_map_loader/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/grid_map/grid_map_octomap/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/grid_map/grid_map_pcl/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/grid_map/grid_map_ros/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/grid_map/grid_map_rviz_plugin/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/grid_map/grid_map_sdf/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/grid_map/grid_map_visualization/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/kindr/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/kindr_ros/kindr_ros/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/kindr_ros/kindr_rviz_plugins/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/message_logger/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/kindr_ros/multi_dof_joint_trajectory_rviz_plugins/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/any_node/param_io/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/any_node/signal_handler/include/**",
+        "/home/rover/software/ros1/src/sirius_robot/sirius_odrive_driver/include/**",
+        "/home/rover/software/ros1/src/sirius_robot/sirius_roboclaw_driver/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/traversability_estimation/traversability_estimation/include/**",
+        "/home/rover/software/ros1/src/sirius_common/external/traversability_estimation/traversability_estimation_filters/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

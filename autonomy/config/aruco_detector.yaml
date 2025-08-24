@@ -1,0 +1,26 @@
+# intrinsic_camera_matrix:
+# - [2.20515204e+03, 0.00000000e+00, 1.30304105e+03]
+# - [0.00000000e+00, 2.10429784e+03, 7.90716433e+02]
+# - [0.00000000e+00, 0.00000000e+00, 1.00000000e+00]
+
+# distortion_coefficients: [-0.58811621,  0.45672433,  0.01724813, -0.00315617, -0.18982763]
+
+aruco_bow:
+  camera_address: "rtsp://root:skar@192.168.1.22/stream=0"
+  framerate_decimation: 15
+  marker_size: 0.2
+
+aruco_stern:
+  camera_address: "rtsp://root:skar@192.168.1.20/stream=0"
+  framerate_decimation: 15
+  marker_size: 0.2
+
+aruco_starboard:
+  camera_address: "rtsp://root:skar@192.168.1.23/stream=0"
+  framerate_decimation: 15
+  marker_size: 0.2
+
+aruco_port:
+  camera_address: "rtsp://root:skar@192.168.1.17/stream=0"
+  framerate_decimation: 15
+  marker_size: 0.2

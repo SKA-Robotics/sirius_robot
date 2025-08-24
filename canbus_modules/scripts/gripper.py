@@ -20,16 +20,25 @@ class GripperCanbus(CanbusInterface):
         self.open_trigger_subscriber = rospy.Subscriber(
             OPEN_TRIGGER_TOPIC, Empty, self.receive_open_trigger)
 
+        self.rate = rospy.Rate(5)
+        self.setpoint = None
+
     def run(self) -> None:
-        rospy.spin()
+        while True:
+            if self.setpoint is not None:
+                pwm = self.setpoint
+                data = [pwm >> 8, pwm & 0xFF]
+                self.send_frame(0x1, data)
+
+            self.rate.sleep()
 
     def receive_force_command(self, msg: Float32):
         pwm = int(min(1023, max(0, msg.data * 1023)))
-        data = [pwm >> 8, pwm & 0xFF]
-        self.send_frame(0x1, data)
+        self.setpoint = pwm
 
     def receive_open_trigger(self, msg: Empty):
         self.send_frame(0x0, [0])
+        self.setpoint = None
 
     def receive_frame(self, command_id, data, frame: Frame):
         pass

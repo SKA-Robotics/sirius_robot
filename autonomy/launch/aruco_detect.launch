@@ -1,0 +1,12 @@
+<launch>
+
+    <rosparam command="load" file="$(find autonomy)/config/aruco_detector.yaml"/>
+    <!-- <node pkg="autonomy" type="aruco_detector_node.py" name="aruco_bow" output="screen"/> -->
+    <node pkg="autonomy" type="aruco_detector_node.py" name="aruco_bow" output="screen"/>
+    <node pkg="autonomy" type="aruco_detector_node.py" name="aruco_stern" output="screen"/>
+    <node pkg="autonomy" type="aruco_detector_node.py" name="aruco_port" output="screen"/>
+    <node pkg="autonomy" type="aruco_detector_node.py" name="aruco_starboard" output="screen"/>
+
+    <node pkg="autonomy" type="aruco_follower.py" name="aruco_follower" output="screen"/>
+
+</launch>

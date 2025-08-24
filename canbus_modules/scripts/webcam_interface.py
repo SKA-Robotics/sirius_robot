@@ -5,6 +5,7 @@ import subprocess
 from std_msgs.msg import Int32
 from functools import partial
 import time
+import numpy as np
 
 
 class CameraRotator:
@@ -83,7 +84,7 @@ class CameraRotator:
         self.cameras_positions[camera_id] += steps
         print(self.cameras_positions[camera_id])
         subprocess.run(rotate_command, shell=True)
-        time.sleep(1)
+        time.sleep(abs(steps) / 500 * 1 + 0.2)
 
     def add_camera(self, camera_usb, camera_id):
         usb_nr = (camera_usb.split(":"))[-1]

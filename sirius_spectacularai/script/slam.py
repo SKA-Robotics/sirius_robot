@@ -5,6 +5,7 @@ import depthai
 import rospy
 import numpy as np
 import tf2_ros
+import PyKDL
 from nav_msgs.msg import Odometry
 from cv_bridge import CvBridge
 from sensor_msgs.msg import PointCloud2, PointField, CameraInfo, Image, NavSatFix
@@ -13,24 +14,42 @@ from geometry_msgs.msg import TransformStamped
 from message_constructors import to_camera_info_message, to_odometry_message, to_pose_message
 from transforms import transform_odometry_child_frame
 
+manipMount = False
+#manipMount = True
+
+rospy.init_node("slam_node", anonymous=True)
+camera_id = rospy.get_param("~camera_id", "19443010114A722700")
+pointcloud_frame = rospy.get_param("~pointcloud_frame", "slam")
+odom_frame = rospy.get_param("~odom_frame", "base_link")
+topic_prefix = rospy.get_param("~topic_prefix", "/slam")
+
+print(camera_id)
+print(pointcloud_frame)
+print(odom_frame)
+print(camera_id)
+
 
 class SLAMNode:
 
     def __init__(self):
-        rospy.init_node("slam_node", anonymous=True)
-        self.odometry_publisher = rospy.Publisher("/slam/odometry",
+        self.odometry_publisher = rospy.Publisher(topic_prefix + "/odometry",
                                                   Odometry,
                                                   queue_size=10)
-        self.global_odometry_publisher = rospy.Publisher(
-            "/slam/global_odometry", Odometry, queue_size=10)
-        self.rgb_publisher = rospy.Publisher("/slam/rgb", Image, queue_size=10)
-        self.point_publisher = rospy.Publisher("/slam/pointcloud",
+        self.global_odometry_publisher = rospy.Publisher(topic_prefix +
+                                                         "/global_odometry",
+                                                         Odometry,
+                                                         queue_size=10)
+        self.rgb_publisher = rospy.Publisher(topic_prefix + "/rgb",
+                                             Image,
+                                             queue_size=10)
+        self.point_publisher = rospy.Publisher(topic_prefix + "/pointcloud",
                                                PointCloud2,
                                                queue_size=10)
-        self.depth_publisher = rospy.Publisher("/slam/depth",
+        self.depth_publisher = rospy.Publisher(topic_prefix + "/depth",
                                                Image,
                                                queue_size=10)
-        self.camera_info_publisher = rospy.Publisher("/slam/camera_info",
+        self.camera_info_publisher = rospy.Publisher(topic_prefix +
+                                                     "/camera_info",
                                                      CameraInfo,
                                                      queue_size=10)
         self.gps_subscriber = rospy.Subscriber('/gps/fix', NavSatFix,
@@ -59,16 +78,17 @@ class SLAMNode:
     def gps_fix_callback(self, msg: NavSatFix):
         if self.session is not None:
             position_covariance = [
-                [a / 1000 for a in msg.position_covariance[0:3]],
-                [a / 1000 for a in msg.position_covariance[3:6]],
-                [a / 1000 for a in msg.position_covariance[6:9]],
+                [a for a in msg.position_covariance[0:3]],
+                [a for a in msg.position_covariance[3:6]],
+                [a for a in msg.position_covariance[6:9]],
             ]
-
+            """
             position_covariance = [
                 [1, 0, 0],
                 [0, 1, 0],
                 [0, 0, 5],
             ]
+            """
 
             coordinates = spectacularAI.WgsCoordinates()
             coordinates.altitude = msg.altitude
@@ -114,18 +134,35 @@ class SLAMNode:
 
     def newOdometryFrame(self, vioOutput):
         msg = to_odometry_message(vioOutput, is_global=False)
-        msg = transform_odometry_child_frame(msg, "base_link", self.tf_buffer)
+        if manipMount == False:
+            msg = transform_odometry_child_frame(msg, "base_link",
+                                                 self.tf_buffer)
+        else:
+            pose = msg.pose.pose
+            frame = PyKDL.Frame(
+                PyKDL.Rotation.Quaternion(pose.orientation.x,
+                                          pose.orientation.y,
+                                          pose.orientation.z,
+                                          pose.orientation.w),
+                PyKDL.Vector(pose.position.x, pose.position.y,
+                             pose.position.z))
+
+            frame *= PyKDL.Frame(PyKDL.Rotation(),
+                                 PyKDL.Vector(0.037, 0.0849, 0.24))
+            msg.pose.pose.position.x = frame.p.x()
+            msg.pose.pose.position.y = frame.p.y()
+            msg.pose.pose.position.z = frame.p.z()
+
         msg.header.frame_id = "map"
         self.odometry_publisher.publish(msg)
 
         br = tf2_ros.TransformBroadcaster()
         t = TransformStamped()
         t.header = msg.header
-        t.child_frame_id = "base_link_local"
+        t.child_frame_id = odom_frame
         t.transform.rotation = msg.pose.pose.orientation
         t.transform.translation = msg.pose.pose.position
         br.sendTransform(t)
-
         msg = to_odometry_message(vioOutput, is_global=True)
         if msg is not None:
             msg = transform_odometry_child_frame(msg, "base_link",
@@ -143,7 +180,7 @@ class SLAMNode:
 
         msg = PointCloud2()
         msg.header.stamp = rospy.Time.now()
-        msg.header.frame_id = "slam"
+        msg.header.frame_id = pointcloud_frame
         if keyframe.pointCloud.hasColors():
             pc[:, 3:] = keyframe.pointCloud.getRGB24Data() * (1. / 255.)
         msg.point_step = 4 * 6
@@ -165,6 +202,15 @@ class SLAMNode:
 
 
 if __name__ == '__main__':
+    infos = depthai.DeviceBootloader.getAllAvailableDevices()
+
+    for info in infos:
+        state = str(info.state).split('X_LINK_')[1]
+
+        print(
+            f"Found device '{info.name}', MxId: '{info.mxid}', State: '{state}'"
+        )
+
     configInternal = {
         "computeStereoPointCloud": "true",
         "pointCloudNormalsEnabled": "true",
@@ -200,13 +246,13 @@ if __name__ == '__main__':
     config.internalParameters = configInternal
     config.useSlam = True
     # config.useColor = True
-    # config.imuToGnss = spectacularAI.Vector3f()
-
+    config.imuToGnss = spectacularAI.Vector3d(0, -0.93, -0.71)
     vioPipeline = spectacularAI.depthai.Pipeline(pipeline, config,
                                                  onMappingOutput)
 
-    with depthai.Device(pipeline) as device, vioPipeline.startSession(
-            device) as vio_session:
+    with depthai.Device(
+            pipeline, deviceInfo=depthai.DeviceInfo(camera_id)
+    ) as device, vioPipeline.startSession(device) as vio_session:
         """
         vio_session.addAbsolutePose(
             spectacularAI.Pose.fromMatrix(1.0, [

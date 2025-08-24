@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
+import random
 import rospy
+import time
 from can_msgs.msg import Frame
 import roboszpon_interface
 from sensor_msgs.msg import JointState
@@ -155,11 +157,10 @@ class Node:
                 joint.process_frame(frame)
 
     def receive_command(self, msg: JointState):
-        for i, joint in enumerate(msg.name):
+
+        for i, joint in sorted(enumerate(msg.name),
+                               key=lambda _: random.random()):
             if joint not in self.joints.keys():
-                rospy.logwarn(
-                    f"Recieved joint_state command for unsupported joint: {joint}"
-                )
                 continue
 
             if self.joints[joint].mode != "RUNNING":
@@ -197,11 +198,12 @@ class Node:
         msg.header = Header()
         msg.header.stamp = rospy.Time.now()
         for joint in self.joints.values():
-            msg.name.append(joint.name)
-            msg.mode.append(joint.mode)
-            msg.flags.append(str(joint.flags))
-            msg.temperature.append(joint.temperature)
-            msg.duty.append(joint.duty)
+            if joint.are_readings_valid():
+                msg.name.append(joint.name)
+                msg.mode.append(joint.mode)
+                msg.flags.append(str(joint.flags))
+                msg.temperature.append(joint.temperature)
+                msg.duty.append(joint.duty)
 
         self.status_publisher.publish(msg)
 
