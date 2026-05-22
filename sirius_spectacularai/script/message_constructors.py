@@ -29,8 +29,8 @@ def to_odometry_message(vioOutput, is_global=False):
     msg.child_frame_id = "front_rgb_camera_optical"
 
     if vioOutput.globalPose is None and is_global == True:
-        return None
-        #is_global = False
+        #return None
+        is_global = False
 
     if is_global:
         datum = spectacularAI.WgsCoordinates()
@@ -53,15 +53,24 @@ def to_odometry_message(vioOutput, is_global=False):
         # datum.latitude = 38.407213
 
         # MDRS
-        datum.altitude = 1380.0
-        datum.longitude = -110.7847004
-        datum.latitude = 38.4200181
-
+        #datum.altitude = 1380.0
+        #datum.longitude = -110.7847004
+        #datum.latitude = 38.4200181
 
         # WAT
         #datum.altitude = 142.673
         #datum.latitude = 52.2527425
         #datum.longitude = 20.9064178
+
+        # AGH akademik
+        #datum.latitude = 50.0692336
+        #datum.longitude = 19.9046307
+        #datum.altitude = 246.15800000000002
+        # ERC Marsyard
+        datum.latitude = 50.0662241
+        datum.longitude = 19.9131708
+        #datum.altitude = 245.53
+        datum.altitude = 243.6
         """
         PUNKT 0,0
         ==================================

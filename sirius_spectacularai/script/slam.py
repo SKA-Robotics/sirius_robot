@@ -14,19 +14,18 @@ from geometry_msgs.msg import TransformStamped
 from message_constructors import to_camera_info_message, to_odometry_message, to_pose_message
 from transforms import transform_odometry_child_frame
 
-manipMount = False
-#manipMount = True
-
 rospy.init_node("slam_node", anonymous=True)
 camera_id = rospy.get_param("~camera_id", "19443010114A722700")
 pointcloud_frame = rospy.get_param("~pointcloud_frame", "slam")
 odom_frame = rospy.get_param("~odom_frame", "base_link")
 topic_prefix = rospy.get_param("~topic_prefix", "/slam")
+manipMount = rospy.get_param("~manip_mount", False)
 
 print(camera_id)
 print(pointcloud_frame)
 print(odom_frame)
 print(camera_id)
+print(manipMount)
 
 
 class SLAMNode:
@@ -137,21 +136,6 @@ class SLAMNode:
         if manipMount == False:
             msg = transform_odometry_child_frame(msg, "base_link",
                                                  self.tf_buffer)
-        else:
-            pose = msg.pose.pose
-            frame = PyKDL.Frame(
-                PyKDL.Rotation.Quaternion(pose.orientation.x,
-                                          pose.orientation.y,
-                                          pose.orientation.z,
-                                          pose.orientation.w),
-                PyKDL.Vector(pose.position.x, pose.position.y,
-                             pose.position.z))
-
-            frame *= PyKDL.Frame(PyKDL.Rotation(),
-                                 PyKDL.Vector(0.037, 0.0849, 0.24))
-            msg.pose.pose.position.x = frame.p.x()
-            msg.pose.pose.position.y = frame.p.y()
-            msg.pose.pose.position.z = frame.p.z()
 
         msg.header.frame_id = "map"
         self.odometry_publisher.publish(msg)
@@ -246,13 +230,19 @@ if __name__ == '__main__':
     config.internalParameters = configInternal
     config.useSlam = True
     # config.useColor = True
-    config.imuToGnss = spectacularAI.Vector3d(0, -0.93, -0.71)
+    #config.imuToGnss = spectacularAI.Vector3d(0, -0.93, -0.71)
+    config.imuToGnss = spectacularAI.Vector3d(-0.68, 0, 0.86)
     vioPipeline = spectacularAI.depthai.Pipeline(pipeline, config,
                                                  onMappingOutput)
 
     with depthai.Device(
             pipeline, deviceInfo=depthai.DeviceInfo(camera_id)
     ) as device, vioPipeline.startSession(device) as vio_session:
+
+        if manipMount == True:
+            rospy.logwarn("Manip mount enabled")
+            vioPipeline.imuToCameraLeft = [[-1, 0, 0, 0], [0, -1, 0, 0],
+                                           [0, 0, 1, 0], [0, 0, 0, 1]]
         """
         vio_session.addAbsolutePose(
             spectacularAI.Pose.fromMatrix(1.0, [

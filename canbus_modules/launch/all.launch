@@ -2,6 +2,9 @@
 	<node name="power_measurement" pkg="canbus_modules" type="power_measurement.py" output="screen">
 	</node>
 
+	<node name="scales_erc" pkg="canbus_modules" type="scales_erc.py" output="screen">
+        </node>
+
 	<!-- <node name="gripper" pkg="canbus_modules" type="gripper.py" output="screen">
 		<rosparam file="$(find canbus_modules)/config/gripper.yaml" command="load"/>
 	</node> -->

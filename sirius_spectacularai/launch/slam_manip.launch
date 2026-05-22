@@ -1,9 +1,10 @@
 <launch>
   <node pkg="sirius_spectacularai" type="slam.py" name="slam_manip">
-        <param name="camera_id" value="19443010114A722700"/>
+        <param name="camera_id" value="1944301001A68A2D00"/>
         <param name="pointcloud_frame" value="slam_manip"/>
-        <param name="odom_frame" value="gripper"/>
+        <param name="odom_frame" value="camera"/>
         <param name="topic_prefix" value="/slam_manip"/>
+        <param name="manip_mount" value="true" type="bool"/>
   </node>
   <node pkg="tf" type="static_transform_publisher" name="link2_broadcaster" args="0 0 0 0 0 0 1 map slam_manip 100" />
 </launch>

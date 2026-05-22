@@ -1,0 +1,67 @@
+tf:
+  fixed_frame: "map"
+  angular_threshold: 0.01
+  translation_threshold: 0.005
+
+robot:
+  joint_states_topics: ["/joint_states"]
+
+vrPublisher:
+  headsetTopic: "/vr/headset_pose"
+  leftControllerTopic: "/vr/left_controller_pose"
+  rightControllerTopic: "/vr/right_controller_pose"
+  publishRate: 30
+
+topics:
+  - name: "/local_plan"
+    message_type: "nav_msgs/Path"
+    options:
+      color: 0xff0000
+      opacity: 1
+      lineWidth: 2
+
+  - name: "/plan"
+    message_type: "nav_msgs/Path"
+    options:
+      color: 0x0000ff
+      opacity: 1
+      lineWidth: 2
+      
+  - name: "/map"
+    message_type: "nav_msgs/OccupancyGrid"
+    options:
+      colorScheme: "map"
+      showUnknown: true
+      unknownColor: 0xcc0000
+      opacity: 1
+      zOffset: 0
+
+  - name: "/local_costmap/costmap"
+    message_type: "nav_msgs/OccupancyGrid"
+    options:
+      colorScheme: "costmap"
+      showUnknown: true
+      opacity: 0.9
+      zOffset: 0.05
+      renderOrder: 1
+      
+  - name: "/mobile_base_controller/odom"
+    message_type: "nav_msgs/Odometry"
+    options:
+      axesSize: 0.2
+      lineWidth: 5
+      opacity: 1
+
+  - name: "/head_front_camera/depth_registered/points_downsampled"
+    message_type: "sensor_msgs/PointCloud2"
+    options:
+      maxPoints: 50000
+      pointSize: 0.01
+      colorMode: "RGB"
+      opacity: 0.5
+      maxTraces: 10
+      
+#  - name: "/pose"
+#    message_type: "geometry_msgs/PoseStamped"
+#    options:
+#      axesSize: 0.15

@@ -57,10 +57,11 @@
         <param name="queue_size"          value="10"/>
 
         <remap from="rgb/camera_info" to="/$(arg name)/rgb/camera_info"/>
-        <remap from="rgb/image_rect_color" to="/$(arg name)/rgb/image_raw"/>
+        <remap from="rgb/image_rect_color" to="/$(arg name)/rgb/image_color"/>
         <remap from="depth_registered/image_rect" to="/$(arg name)/depth_registered/image"/>    
         <remap from="depth_registered/points" to="/$(arg name)/point_cloud/cloud_registered"/>
     </node>
+    
     <node pkg="imu_transformer" type="imu_transformer_node" name="imu_data_transformer" output="screen">
         <remap from="imu_in/data" to="/$(arg name)/imu/data"/>
         <remap from="imu_out/data" to="/imu_compensated/data"/>

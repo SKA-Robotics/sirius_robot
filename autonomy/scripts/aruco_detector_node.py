@@ -12,7 +12,7 @@ class ArucoPoseEstimator:
         rospy.init_node('aruco_detector', anonymous=True)
 
         # Load ROS parameters
-        self.camera_address = rospy.get_param('~camera_address', "rtsp://root:skar@192.168.1.13/stream=0")
+        self.camera_address = rospy.get_param('~camera_address', "rtsp://root:skar@192.168.1.16/stream=0")
         self.framerate_decimation = rospy.get_param('~framerate_decimation', 7)
         
         self.bridge = CvBridge()
