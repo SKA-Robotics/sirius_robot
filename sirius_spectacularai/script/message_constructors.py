@@ -7,10 +7,10 @@ import PyKDL
 import math
 
 
-def to_pose_message(cameraPose):
+def to_pose_message(cameraPose, frame_id):
     msg = PoseStamped()
     msg.header.stamp = rospy.Time.now()
-    msg.header.frame_id = "front_rgb_camera_optical"
+    msg.header.frame_id = frame_id
 
     msg.pose.position.x = cameraPose.position.x
     msg.pose.position.y = cameraPose.position.y
@@ -22,86 +22,25 @@ def to_pose_message(cameraPose):
     return msg
 
 
-def to_odometry_message(vioOutput, is_global=False):
+def to_odometry_message(vioOutput, coordinates,
+                        config,
+                        is_global=False,):
     msg = Odometry()
     msg.header.stamp = rospy.Time.now()
-    msg.header.frame_id = "odom"
-    msg.child_frame_id = "front_rgb_camera_optical"
+    msg.header.frame_id = config.get('world_frame', 'odom')
+    msg.child_frame_id = config.get('frame_id',
+                                    'front_rgb_camera_optical')
 
-    if vioOutput.globalPose is None and is_global == True:
+    if vioOutput.globalPose is None and is_global:
         return None
-        #is_global = False
 
     if is_global:
         datum = spectacularAI.WgsCoordinates()
-        #datum.altitude = 250
-        #datum.latitude = 50.066220965664
-        #datum.longitude = 19.91318631828
-
-        #datum.altitude = 245.226
-        #datum.latitude = 50.0662169
-        #datum.longitude = 19.913204399999998
-
-        # ITC
-        #datum.altitude = 148.824
-        #datum.longitude = 21.010336799999997
-        #datum.latitude = 52.2198959
-
-        # Loa
-        # datum.altitude = 2139.756
-        # datum.longitude = -111.6388144
-        # datum.latitude = 38.407213
 
         # MDRS
-        datum.altitude = 1380.0
-        datum.longitude = -110.7847004
-        datum.latitude = 38.4200181
-
-
-        # WAT
-        #datum.altitude = 142.673
-        #datum.latitude = 52.2527425
-        #datum.longitude = 20.9064178
-        """
-        PUNKT 0,0
-        ==================================
-        header: 
-        seq: 899
-        stamp: 
-            secs: 1725524793
-            nsecs:    397459
-        frame_id: "gnss"
-        status: 
-        status: 0
-        service: 1
-        latitude: 50.0662169
-        longitude: 19.913204399999998
-        altitude: 245.226
-        position_covariance: [0.0064, 0.0, 0.0, 0.0, 0.0064, 0.0, 0.0, 0.0, 0.011236]
-        position_covariance_type: 2
-
-        PUNKT K2
-        ======================================
-        header: 
-        seq: 1251
-        stamp: 
-            secs: 1725525145
-            nsecs:    307394
-        frame_id: "gnss"
-        status: 
-        status: 0
-        service: 1
-        latitude: 50.066166499999994
-        longitude: 19.913472199999998
-        altitude: 244.61100000000002
-        position_covariance: [0.007568999999999999, 0.0, 0.0, 0.0, 0.007568999999999999, 0.0, 0.0, 0.0, 0.013225]
-        position_covariance_type: 2
-        """
-
-        # Środek marsjardu ARC
-        # latitude: 39.9013943
-        # longitude: 32.7704792
-        # altitude: 907.476
+        datum.altitude = coordinates.altitude
+        datum.longitude = coordinates.longitude
+        datum.latitude = coordinates.latitude
 
         pose = vioOutput.globalPose.getEnuCameraPose(0, datum).pose
         velocity = vioOutput.globalPose.velocity
@@ -115,8 +54,7 @@ def to_odometry_message(vioOutput, is_global=False):
         positionCovariance = vioOutput.positionCovariance
         velocityCovariance = vioOutput.velocityCovariance
 
-    #marsyard_angle = 106.340833
-    marsyard_angle = 0
+    marsyard_angle = config.get('marsyard_angle', 0)
 
     if marsyard_angle != 0.0 and is_global is True:
         frame = PyKDL.Frame(
@@ -166,11 +104,11 @@ def to_odometry_message(vioOutput, is_global=False):
     return msg
 
 
-def to_camera_info_message(camera, frame, ts):
+def to_camera_info_message(camera, frame, frame_id, ts):
     intrinsic = camera.getIntrinsicMatrix()
     msg = CameraInfo()
     msg.header.stamp = ts
-    msg.header.frame_id = "front_rgb_camera_optical"
+    msg.header.frame_id = frame_id
     msg.height = frame.shape[0]
     msg.width = frame.shape[1]
     msg.distortion_model = "plumb_bob"

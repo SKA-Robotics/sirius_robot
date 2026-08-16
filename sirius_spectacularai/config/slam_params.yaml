@@ -1,0 +1,25 @@
+manip_mount: false
+
+camera_id: "19443010B1B2F51200"
+pointcloud_frame: "slam"
+odom_frame: "base_link_local"
+topic_prefix: "/slam"
+
+frame_id: "map"
+header_frame_id: "front_rgb_camera_optical"
+
+altitude: 148.824
+longitude: 21.010336799999997
+latitude: 52.2198959
+
+manip_offset: [0.037, 0.0849, 0.24]
+imu_to_gnss_offset: [0, -0.93, -0.71]
+
+point_cloud_margin_left_px: 10
+point_cloud_margin_right_px: 10
+point_cloud_margin_top_px: 10
+point_cloud_margin_bottom_px: 10
+
+# marsyard_angle = 106.340833
+marsyard_angle: 0
+world_frame: 'odom'
