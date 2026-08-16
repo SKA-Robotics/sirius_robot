@@ -3,25 +3,17 @@
 import spectacularAI
 import depthai
 import rospy
-import numpy as np
 import tf2_ros
-import PyKDL
+from script.pointcloud_processor import PointCloudProcessor
+from script.odometry_processor import OdometryProcessor
+from script.gps_handler import GPSHandler
 from dataclasses import dataclass
 from nav_msgs.msg import Odometry
 from cv_bridge import CvBridge
-from sensor_msgs.msg import PointCloud2, PointField, CameraInfo, Image, NavSatFix
-from geometry_msgs.msg import TransformStamped
+from sensor_msgs.msg import PointCloud2, CameraInfo, Image, NavSatFix
 
-from message_constructors import to_camera_info_message, to_odometry_message, to_pose_message
-from transforms import transform_odometry_child_frame
+from message_constructors import to_camera_info_message
 
-
-# print(camera_id)
-# print(pointcloud_frame)
-# print(odom_frame)
-# print(camera_id)
-# print(f"Point cloud edge margins (px) - left: {margin_left_px}, right: {margin_right_px}, "
-#       f"top: {margin_top_px}, bottom: {margin_bottom_px}")
 
 @dataclass
 class Coordinates:
@@ -33,12 +25,7 @@ class Coordinates:
 class SLAMNode:
     def __init__(self):
         rospy.init_node("slam_node", anonymous=True)
-
-        self._manipMount = rospy.get_param("~manip_mount", False)
-
         self._camera_id = rospy.get_param("~camera_id", "19443010114A722700")
-        self._pointcloud_frame = rospy.get_param("~pointcloud_frame", "slam")
-        self._odom_frame = rospy.get_param("~odom_frame", "base_link")
 
         topic_prefix = rospy.get_param("~topic_prefix", "/slam")
         self._header_frame_id = rospy.get_param('~header_frame_id',
@@ -75,6 +62,7 @@ class SLAMNode:
                                                      queue_size=10)
         self.gps_subscriber = rospy.Subscriber('/gps/fix', NavSatFix,
                                                self.gps_fix_callback)
+        self._tf_broadcaster = tf2_ros.TransformBroadcaster()
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
 
@@ -85,21 +73,37 @@ class SLAMNode:
         self.device = None
 
         self.start_time = rospy.Time.now()
-        self._frame_id = rospy.get_param('~frame_id', 'map')
 
         alt = rospy.get_param('~altitude', 148.824)
         long = rospy.get_param('~longitude', 21.010336799999997)
         lat = rospy.get_param('~latitude', 52.2198959)
         self._coordinates = Coordinates(alt, long, lat)
 
-        self._manip_offset = rospy.get_param('~manip_offset', [0.037, 0.0849, 0.24])
+        odom_config = {
+            'frame_id': rospy.get_param('~frame_id', 'map'),
+            'odom_frame': rospy.get_param("~odom_frame", 'base_link'),
+            'manip_mount': rospy.get_param('~manip_mount', False),
+            'manip_offset': rospy.get_param('~manip_offset',
+                                            [0.037, 0.0849, 0.24])
+        }
+        self._odometry_processor = OdometryProcessor(self._coordinates,
+                                                     self._message_config,
+                                                     self.tf_buffer,
+                                                     odom_config)
+
         self._imu_to_gnss_offset = rospy.get_param('~imu_to_gnss_offset',
                                                    [0, -0.93, -0.71])
-
-        self.margin_left_px = rospy.get_param("~point_cloud_margin_left_px", 10)
-        self.margin_right_px = rospy.get_param("~point_cloud_margin_right_px", 10)
-        self.margin_top_px = rospy.get_param("~point_cloud_margin_top_px", 10)
-        self.margin_bottom_px = rospy.get_param("~point_cloud_margin_bottom_px", 10)
+        margins = {
+            'margin_left_px': rospy.get_param("~point_cloud_margin_left_px", 10),
+            'margin_right_px': rospy.get_param("~point_cloud_margin_right_px", 10),
+            'margin_top_px': rospy.get_param("~point_cloud_margin_top_px", 10),
+            'margin_bottom_px': rospy.get_param("~point_cloud_margin_bottom_px", 10)
+        }
+        pointcloud_frame = rospy.get_param('~pointcloud_frame',
+                                           'slam')
+        self._pc_processor = PointCloudProcessor(pointcloud_frame,
+                                                 margins)
+        self._gps_handler = GPSHandler()
 
     @property
     def camera_id(self):
@@ -109,45 +113,14 @@ class SLAMNode:
     def imu_to_gnss_offset(self):
         return self._imu_to_gnss_offset
 
-    def computeGPSTimeOffset(self):
-        imu_queue = self.device.getOutputQueue(name="spectacularAI_imu",
-                                               maxSize=1,
-                                               blocking=True)
-        imu_data = imu_queue.get()
-        acc = imu_data.packets[0].acceleroMeter
-        ts_device = acc.getTimestampDevice().total_seconds()
-
-        return ts_device - 0.5
-
     def gps_fix_callback(self, msg: NavSatFix):
-        if self.session is not None:
-            position_covariance = [
-                [a for a in msg.position_covariance[0:3]],
-                [a for a in msg.position_covariance[3:6]],
-                [a for a in msg.position_covariance[6:9]],
-            ]
-            """
-            position_covariance = [
-                [1, 0, 0],
-                [0, 1, 0],
-                [0, 0, 5],
-            ]
-            """
-
-            coordinates = spectacularAI.WgsCoordinates()
-            coordinates.altitude = msg.altitude
-            coordinates.latitude = msg.latitude
-            coordinates.longitude = msg.longitude
-            rospy.loginfo(
-                f"{self.computeGPSTimeOffset()} {coordinates.latitude} {coordinates.longitude}"
-            )
-            self.session.addGnss(self.computeGPSTimeOffset(), coordinates,
-                                 position_covariance)
+        self._gps_handler.gps_fix_callback(msg, self.device,
+                                           self.session)
 
     def has_keyframe(self, frame_id):
         return frame_id in self.keyframes
 
-    def newKeyFrame(self, frame_id, keyframe):
+    def new_key_frame(self, frame_id, keyframe):
         now = rospy.Time.now()
         self.keyframes[frame_id] = True
         sequence_number = int(frame_id)
@@ -168,7 +141,8 @@ class SLAMNode:
                                           now)
         self.camera_info_publisher.publish(info_msg)
 
-        self.newPointCloud(keyframe)
+        msg = self._pc_processor.new_point_cloud(keyframe)
+        self.point_publisher.publish(msg)
 
         depth_frame = keyframe.frameSet.getAlignedDepthFrame(
             keyframe.frameSet.rgbFrame)
@@ -179,113 +153,16 @@ class SLAMNode:
         depth_msg.header.seq = sequence_number
         self.depth_publisher.publish(depth_msg)
 
-    def newOdometryFrame(self, vioOutput):
-        msg = to_odometry_message(vioOutput, self._coordinates,
-                                  self._message_config,
-                                  is_global=False)
-        if not self._manipMount:
-            msg = transform_odometry_child_frame(msg, self._odom_frame,
-                                                 self.tf_buffer)
-        else:
-            pose = msg.pose.pose
-            frame = PyKDL.Frame(
-                PyKDL.Rotation.Quaternion(pose.orientation.x,
-                                          pose.orientation.y,
-                                          pose.orientation.z,
-                                          pose.orientation.w),
-                PyKDL.Vector(pose.position.x, pose.position.y,
-                             pose.position.z))
+    def new_odometry_frame(self, vioOutput):
+        msgs = self._odometry_processor.new_odometry_frame(vioOutput)
 
-            frame *= PyKDL.Frame(PyKDL.Rotation(),
-                                 PyKDL.Vector(self._manip_offset[0],
-                                              self._manip_offset[1],
-                                              self._manip_offset[2]))
-            msg.pose.pose.position.x = frame.p.x()
-            msg.pose.pose.position.y = frame.p.y()
-            msg.pose.pose.position.z = frame.p.z()
+        t = msgs['tf']
+        self._tf_broadcaster.sendTransform(t)
 
-        msg.header.frame_id = self._frame_id
-        self.odometry_publisher.publish(msg)
+        self.odometry_publisher.publish(msgs['odometry'])
 
-        br = tf2_ros.TransformBroadcaster()
-        t = TransformStamped()
-        t.header = msg.header
-        t.child_frame_id = self._odom_frame
-        t.transform.rotation = msg.pose.pose.orientation
-        t.transform.translation = msg.pose.pose.position
-        br.sendTransform(t)
-        msg = to_odometry_message(vioOutput, self._coordinates,
-                                  self._message_config,
-                                  is_global=True)
-        if msg is not None:
-            msg = transform_odometry_child_frame(msg, self._odom_frame,
-                                                 self.tf_buffer)
-            msg.header.frame_id = self._frame_id
-            self.global_odometry_publisher.publish(msg)
-
-    def computeEdgeMask(self, rgb_bitmap, camera, positions):
-        width = rgb_bitmap.getWidth()
-        height = rgb_bitmap.getHeight()
-
-        z = positions[:, 2]
-        in_front = z > 1e-6
-
-        K = camera.getIntrinsicMatrix()
-        fx, fy = K[0, 0], K[1, 1]
-        cx, cy = K[0, 2], K[1, 2]
-
-        u = np.full(positions.shape[0], -1.0)
-        v = np.full(positions.shape[0], -1.0)
-        u[in_front] = fx * positions[in_front, 0] / z[in_front] + cx
-        v[in_front] = fy * positions[in_front, 1] / z[in_front] + cy
-
-        return (
-            in_front &
-            (u > self.margin_left_px) &
-            (u < width - self.margin_right_px) &
-            (v > self.margin_top_px) &
-            (v < height - self.margin_bottom_px)
-        )
-
-    def newPointCloud(self, keyframe):
-        camToWorld = keyframe.frameSet.rgbFrame.cameraPose.getCameraToWorldMatrix(
-        )
-        camera = keyframe.frameSet.rgbFrame.cameraPose.camera
-        rgb_bitmap = keyframe.frameSet.getUndistortedFrame(
-            keyframe.frameSet.rgbFrame).image
-
-        positions = keyframe.pointCloud.getPositionData()
-
-        mask = self.computeEdgeMask(rgb_bitmap, camera, positions)
-        positions = positions[mask]
-
-        pc = np.zeros((positions.shape[0], 6), dtype=np.float32)
-        p_C = np.vstack((positions.T, np.ones((1, positions.shape[0])))).T
-        pc[:, :3] = (camToWorld @ p_C[:, :, None])[:, :3, 0]
-
-        msg = PointCloud2()
-        msg.header.stamp = rospy.Time.now()
-        msg.header.frame_id = self._pointcloud_frame
-        if keyframe.pointCloud.hasColors():
-            colors = keyframe.pointCloud.getRGB24Data()
-            colors = colors[mask]
-            pc[:, 3:] = colors * (1. / 255.)
-        msg.point_step = 4 * 6
-        msg.height = 1
-        msg.width = pc.shape[0]
-        msg.row_step = msg.point_step * pc.shape[0]
-        msg.data = pc.tobytes()
-        msg.is_bigendian = False
-        msg.is_dense = False
-        ros_dtype = PointField.FLOAT32
-        itemsize = np.dtype(np.float32).itemsize
-        msg.fields = [
-            PointField(name=n,
-                       offset=i * itemsize,
-                       datatype=ros_dtype,
-                       count=1) for i, n in enumerate('xyzrgb')
-        ]
-        self.point_publisher.publish(msg)
+        if msgs['global_odometry'] is not None:
+            self.global_odometry_publisher.publish(msgs['global_odometry'])
 
 
 if __name__ == '__main__':
@@ -294,7 +171,7 @@ if __name__ == '__main__':
     for info in infos:
         state = str(info.state).split('X_LINK_')[1]
 
-        print(
+        rospy.loginfo(
             f"Found device '{info.name}', MxId: '{info.mxid}', State: '{state}'"
         )
 
@@ -302,15 +179,15 @@ if __name__ == '__main__':
         "computeStereoPointCloud": "true",
         "pointCloudNormalsEnabled": "true",
         "computeDenseStereoDepth": "true",
+        "useRectification": "true"
     }
-    configInternal["useRectification"] = "true"
 
     slam_node = SLAMNode()
 
-    def onVioOutput(vioOutput):
-        slam_node.newOdometryFrame(vioOutput)
+    def on_vio_output(vioOutput):
+        slam_node.new_odometry_frame(vioOutput)
 
-    def onMappingOutput(output):
+    def on_mapping_output(output):
         for frame_id in output.updatedKeyFrames:
             keyFrame = output.map.keyFrames.get(frame_id)
 
@@ -322,12 +199,12 @@ if __name__ == '__main__':
             if not keyFrame.pointCloud: continue
 
             if not slam_node.has_keyframe(frame_id):
-                slam_node.newKeyFrame(frame_id, keyFrame)
+                slam_node.new_key_frame(frame_id, keyFrame)
 
         if output.finalMap:
-            print("Final map ready!")
+            rospy.loginfo("Final map ready!")
 
-    print("Starting OAK-D device")
+    rospy.loginfo("Starting OAK-D device")
     pipeline = depthai.Pipeline()
     config = spectacularAI.depthai.Configuration()
     config.internalParameters = configInternal
@@ -337,21 +214,12 @@ if __name__ == '__main__':
                                               slam_node.imu_to_gnss_offset[1],
                                               slam_node.imu_to_gnss_offset[2])
     vioPipeline = spectacularAI.depthai.Pipeline(pipeline, config,
-                                                 onMappingOutput)
+                                                 on_mapping_output)
 
     with depthai.Device(
             pipeline, deviceInfo=depthai.DeviceInfo(slam_node.camera_id)
     ) as device, vioPipeline.startSession(device) as vio_session:
-        """
-        vio_session.addAbsolutePose(
-            spectacularAI.Pose.fromMatrix(1.0, [
-                [1.0, 0.0, 0.0, 0.0],
-                [0.0, 1.0, 0.0, 0.0],
-                [0.0, 0.0, 1.0, 0.0],
-                [0.0, 0.0, 0.0, 1.0],
-            ]), 0)
-        """
         slam_node.device = device
         slam_node.session = vio_session
         while not rospy.is_shutdown():
-            onVioOutput(vio_session.waitForOutput())
+            on_vio_output(vio_session.waitForOutput())
