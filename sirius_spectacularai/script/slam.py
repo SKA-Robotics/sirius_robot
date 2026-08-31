@@ -23,17 +23,10 @@ pointcloud_frame = rospy.get_param("~pointcloud_frame", "slam")
 odom_frame = rospy.get_param("~odom_frame", "base_link")
 topic_prefix = rospy.get_param("~topic_prefix", "/slam")
 
-margin_left_px = rospy.get_param("~point_cloud_margin_left_px", 10)
-margin_right_px = rospy.get_param("~point_cloud_margin_right_px", 10)
-margin_top_px = rospy.get_param("~point_cloud_margin_top_px", 10)
-margin_bottom_px = rospy.get_param("~point_cloud_margin_bottom_px", 10)
-
 print(camera_id)
 print(pointcloud_frame)
 print(odom_frame)
 print(camera_id)
-print(f"Point cloud edge margins (px) - left: {margin_left_px}, right: {margin_right_px}, "
-      f"top: {margin_top_px}, bottom: {margin_bottom_px}")
 
 
 class SLAMNode:
@@ -71,11 +64,6 @@ class SLAMNode:
         self.device = None
 
         self.start_time = rospy.Time.now()
-
-        self.margin_left_px = margin_left_px
-        self.margin_right_px = margin_right_px
-        self.margin_top_px = margin_top_px
-        self.margin_bottom_px = margin_bottom_px
 
     def computeGPSTimeOffset(self):
         imu_queue = self.device.getOutputQueue(name="spectacularAI_imu",
@@ -182,42 +170,10 @@ class SLAMNode:
             msg.header.frame_id = "map"
             self.global_odometry_publisher.publish(msg)
 
-    def computeEdgeMask(self, rgb_bitmap, camera, positions):
-        width = rgb_bitmap.getWidth()
-        height = rgb_bitmap.getHeight()
-
-        z = positions[:, 2]
-        in_front = z > 1e-6
-
-        K = camera.getIntrinsicMatrix()
-        fx, fy = K[0, 0], K[1, 1]
-        cx, cy = K[0, 2], K[1, 2]
-
-        u = np.full(positions.shape[0], -1.0)
-        v = np.full(positions.shape[0], -1.0)
-        u[in_front] = fx * positions[in_front, 0] / z[in_front] + cx
-        v[in_front] = fy * positions[in_front, 1] / z[in_front] + cy
-
-        return (
-            in_front &
-            (u > self.margin_left_px) &
-            (u < width - self.margin_right_px) &
-            (v > self.margin_top_px) &
-            (v < height - self.margin_bottom_px)
-        )
-
     def newPointCloud(self, keyframe):
         camToWorld = keyframe.frameSet.rgbFrame.cameraPose.getCameraToWorldMatrix(
         )
-        camera = keyframe.frameSet.rgbFrame.cameraPose.camera
-        rgb_bitmap = keyframe.frameSet.getUndistortedFrame(
-            keyframe.frameSet.rgbFrame).image
-
         positions = keyframe.pointCloud.getPositionData()
-
-        mask = self.computeEdgeMask(rgb_bitmap, camera, positions)
-        positions = positions[mask]
-
         pc = np.zeros((positions.shape[0], 6), dtype=np.float32)
         p_C = np.vstack((positions.T, np.ones((1, positions.shape[0])))).T
         pc[:, :3] = (camToWorld @ p_C[:, :, None])[:, :3, 0]
@@ -226,9 +182,7 @@ class SLAMNode:
         msg.header.stamp = rospy.Time.now()
         msg.header.frame_id = pointcloud_frame
         if keyframe.pointCloud.hasColors():
-            colors = keyframe.pointCloud.getRGB24Data()
-            colors = colors[mask]
-            pc[:, 3:] = colors * (1. / 255.)
+            pc[:, 3:] = keyframe.pointCloud.getRGB24Data() * (1. / 255.)
         msg.point_step = 4 * 6
         msg.height = 1
         msg.width = pc.shape[0]
