@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>sirius_robot</name>
+  <version>0.0.0</version>
+  <description>Metapackage for Sirius rover hardware packages</description>
+  <maintainer email="todo@todo.todo">TODO</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>autonomy</exec_depend>
+  <exec_depend>canbus_modules</exec_depend>
+  <exec_depend>sirius_bringup</exec_depend>
+  <exec_depend>sirius_moteus_driver</exec_depend>
+  <exec_depend>sirius_odrive_driver</exec_depend>
+  <exec_depend>sirius_roboclaw_driver</exec_depend>
+  <exec_depend>sirius_roboszpon_driver</exec_depend>
+  <exec_depend>sirius_spectacularai</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
