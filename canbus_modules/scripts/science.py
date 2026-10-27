@@ -33,7 +33,7 @@ class ScienceController:
 
         #self.surface_container_open = False
         self.surface_container_pushed_in = False
-        self.shovel_in = False
+        self.lid_on = True
         self.shovel_emptying = False
 
         self.drill_current = 0
@@ -52,7 +52,7 @@ class ScienceController:
                 self.module_current = msg.effort[i]
             if joint == 'drill_lift':
                 self.drill_lift_position = msg.position[i]
-                self.drill_lift_current = msg.effort[i]
+                self.drill_lift_current = -msg.effort[i]
             if joint == 'drill_spin':
                 self.drill_current = msg.effort[i]
 
@@ -69,7 +69,6 @@ class ScienceController:
 
             self.command_servos(0)
             self.command_servos(1)
-            self.command_servos(2)
 
             # if print_counter % 1 == 0:
             self.stdscr.clear()
@@ -114,22 +113,14 @@ class ScienceController:
     def command_servos(self, msg_id):
 
         if msg_id == 0:
-            cmd = 0x00d0
-            if self.surface_container_pushed_in:
-                cmd = 0x01a0
-
-        elif msg_id == 2:
-            cmd = 0x0200
+            cmd = 0x0201
             if self.deep_container_pushed_in:
-                cmd = 0x00d0
+                cmd = 0x00c0
 
         elif msg_id == 1:
-            cmd = 0x0300
-            if self.shovel_in:
-                cmd = 0x00d0
-
-            if self.shovel_emptying:
-                cmd = 0x0150
+            cmd = 0x00f0
+            if self.lid_on:
+                cmd = 0x032e
 
         msg = Frame()
         msg.dlc = 2
@@ -182,7 +173,7 @@ class StateIdle(State):
         self._context.deep_container_pushed_in = False
         self._context.surface_container_pushed_in = False
         self._context.shovel_emptying = False
-        self._context.shovel_in = False
+        self._context.lid_on = True
 
     def __repr__(self):
         return "Idle"
@@ -196,8 +187,8 @@ class LoweringModule(State):
         self.start_time = rospy.Time.now()
 
     def step(self):
-        current_limit = -0.2
-        module_limit = -200
+        current_limit = -0.3
+        module_limit = -34 * 6.28
         time = rospy.Time.now()
         if ((time - self.start_time).to_sec() > 2 and
             (self._context.module_current < current_limit)
@@ -217,13 +208,13 @@ class StartDeepDrilling(State):
 
     def step(self):
         current_limit = 5
-        drill_limit = -1000
-        if (self._context.drill_current > current_limit
-                or self._context.drill_lift_position < drill_limit):
-            self._context.set_state(DeepDrillRetraction())
-            return
+        drill_limit = -35 * 6.28
+        #if (self._context.drill_current > current_limit
+        #or self._context.drill_lift_position < drill_limit):
+        self._context.set_state(DeepDrillRetraction())
+        return
         self._context.move_joint("module_lift", 0.0)
-        self._context.move_joint("drill_lift", -1.0)
+        self._context.move_joint("drill_lift", 1.0)
         self._context.move_joint("drill_spin", 1.0)
 
     def __repr__(self):
@@ -236,11 +227,11 @@ class DeepDrillRetraction(State):
         self._context.stdscr.addstr("Deep Drilling Retraction")
 
     def step(self):
-        drill_limit = -5
+        drill_limit = -2 * 6.28
         if self._context.drill_lift_position > drill_limit:
             self._context.set_state(LiftingModule())
             return
-        self._context.move_joint("drill_lift", 1.0)
+        self._context.move_joint("drill_lift", -0.4)
         self._context.move_joint("drill_spin", 0.0)
 
     def __repr__(self):
@@ -253,7 +244,7 @@ class LiftingModule(State):
         self._context.stdscr.addstr("Lifting Module")
 
     def step(self):
-        module_limit = -10
+        module_limit = -1 * 6.28
         if self._context.module_position > module_limit:
             self._context.set_state(PushingContainer())
             return
@@ -278,6 +269,8 @@ class PushingContainer(State):
             return
         #self._context.deep_container_open = True
         self._context.deep_container_pushed_in = True
+        self._context.lid_on = False
+        self._context.move_joint("module_lift", 0.0)
 
     def __repr__(self):
         return "PushingContainer"
@@ -291,11 +284,12 @@ class EmptyingDrill(State):
 
     def step(self):
         time = rospy.Time.now()
-        if (time - self.start_time).to_sec() > 4:
+        if (time - self.start_time).to_sec() > 15:
             self._context.set_state(PushingContainerAway())
             #self._context.set_state(ShakingContainer())
             return
         self._context.move_joint("drill_spin", -1.0)
+        self._context.lid_on = False
 
     def __repr__(self):
         return "EmtyingDrill"
@@ -334,6 +328,7 @@ class PushingContainerAway(State):
             return
         self._context.deep_container_pushed_in = False
         self._context.move_joint("drill_spin", 0.0)
+        self._context.lid_on = True
 
     def __repr__(self):
         return "PushingContainerAway"
@@ -374,7 +369,7 @@ class RegolithCollecting(State):
         if (time - self.start_time).to_sec() > 3:
             self._context.set_state(LiftingSurfaceModule())
             return
-        self._context.shovel_in = True
+        self._context.lid_on = True
 
     def __repr__(self):
         return "RegolihCollecting"

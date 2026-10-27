@@ -4,9 +4,9 @@ import spectacularAI
 import depthai
 import rospy
 import tf2_ros
-from script.pointcloud_processor import PointCloudProcessor
-from script.odometry_processor import OdometryProcessor
-from script.gps_handler import GPSHandler
+from pointcloud_processor import PointCloudProcessor
+from odometry_processor import OdometryProcessor
+from gps_handler import GPSHandler
 from dataclasses import dataclass
 from nav_msgs.msg import Odometry
 from cv_bridge import CvBridge
@@ -23,6 +23,7 @@ class Coordinates:
 
 
 class SLAMNode:
+
     def __init__(self):
         rospy.init_node("slam_node", anonymous=True)
         self._camera_id = rospy.get_param("~camera_id", "19443010114A722700")
@@ -34,11 +35,12 @@ class SLAMNode:
         self._message_config = {
             'frame_id': self._header_frame_id,
             'world_frame': rospy.get_param('~world_frame', 'odom'),
-            'marsyard_angle': rospy.get_param('~marsyard_angle', 0)
+            'marsyard_angle': rospy.get_param('~marsyard_angle', 0),
+            'no_gps': rospy.get_param('~no_gps', False)
         }
 
-        self._camera_info_frame_id = rospy.get_param('~frame_id',
-                                                     'front_rgb_camera_optical')
+        self._camera_info_frame_id = rospy.get_param(
+            '~frame_id', 'front_rgb_camera_optical')
 
         self.odometry_publisher = rospy.Publisher(topic_prefix + "/odometry",
                                                   Odometry,
@@ -94,15 +96,17 @@ class SLAMNode:
         self._imu_to_gnss_offset = rospy.get_param('~imu_to_gnss_offset',
                                                    [0, -0.93, -0.71])
         margins = {
-            'margin_left_px': rospy.get_param("~point_cloud_margin_left_px", 10),
-            'margin_right_px': rospy.get_param("~point_cloud_margin_right_px", 10),
-            'margin_top_px': rospy.get_param("~point_cloud_margin_top_px", 10),
-            'margin_bottom_px': rospy.get_param("~point_cloud_margin_bottom_px", 10)
+            'margin_left_px':
+            rospy.get_param("~point_cloud_margin_left_px", 10),
+            'margin_right_px':
+            rospy.get_param("~point_cloud_margin_right_px", 10),
+            'margin_top_px':
+            rospy.get_param("~point_cloud_margin_top_px", 10),
+            'margin_bottom_px':
+            rospy.get_param("~point_cloud_margin_bottom_px", 10)
         }
-        pointcloud_frame = rospy.get_param('~pointcloud_frame',
-                                           'slam')
-        self._pc_processor = PointCloudProcessor(pointcloud_frame,
-                                                 margins)
+        pointcloud_frame = rospy.get_param('~pointcloud_frame', 'slam')
+        self._pc_processor = PointCloudProcessor(pointcloud_frame, margins)
         self._gps_handler = GPSHandler()
 
     @property
@@ -114,8 +118,7 @@ class SLAMNode:
         return self._imu_to_gnss_offset
 
     def gps_fix_callback(self, msg: NavSatFix):
-        self._gps_handler.gps_fix_callback(msg, self.device,
-                                           self.session)
+        self._gps_handler.gps_fix_callback(msg, self.device, self.session)
 
     def has_keyframe(self, frame_id):
         return frame_id in self.keyframes
@@ -217,8 +220,9 @@ if __name__ == '__main__':
                                                  on_mapping_output)
 
     with depthai.Device(
-            pipeline, deviceInfo=depthai.DeviceInfo(slam_node.camera_id)
-    ) as device, vioPipeline.startSession(device) as vio_session:
+            pipeline, deviceInfo=depthai.DeviceInfo(
+                slam_node.camera_id)) as device, vioPipeline.startSession(
+                    device) as vio_session:
         slam_node.device = device
         slam_node.session = vio_session
         while not rospy.is_shutdown():

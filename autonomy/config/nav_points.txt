@@ -1,0 +1,12 @@
+point 7
+rostopic pub -1 /move_base_simple/goal geometry_msgs/PoseStamped "header: {frame_id: 'map'}, pose: {position: {x: 7.682, y: 2.108, z: -0.163}, orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}}"
+
+
+point 5
+rostopic pub -1 /move_base_simple/goal geometry_msgs/PoseStamped "header: {frame_id: 'map'}, pose: {position: {x: 19.034, y: 5.339, z: -0.259}, orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}}"
+
+point 6
+rostopic pub -1 /move_base_simple/goal geometry_msgs/PoseStamped "header: {frame_id: 'map'}, pose: {position: {x: 8.197, y: 7.675, z: -0.179}, orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}}"
+
+point 3
+rostopic pub -1 /move_base_simple/goal geometry_msgs/PoseStamped "header: {frame_id: 'map'}, pose: {position: {x: 23.149, y: -7.013, z: 0.205}, orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}}"

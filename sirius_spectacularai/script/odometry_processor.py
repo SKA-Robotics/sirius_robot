@@ -5,6 +5,7 @@ from geometry_msgs.msg import TransformStamped
 
 
 class OdometryProcessor:
+
     def __init__(self, coordinates, message_config, tf_buffer, odom_config):
         self._coordinates = coordinates
         self._message_config = message_config
@@ -16,7 +17,8 @@ class OdometryProcessor:
         self._manip_offset = odom_config['manip_offset']
 
     def new_odometry_frame(self, vioOutput):
-        msg = to_odometry_message(vioOutput, self._coordinates,
+        msg = to_odometry_message(vioOutput,
+                                  self._coordinates,
                                   self._message_config,
                                   is_global=False)
         if not self._manip_mount:
@@ -32,27 +34,26 @@ class OdometryProcessor:
                 PyKDL.Vector(pose.position.x, pose.position.y,
                              pose.position.z))
 
-            frame *= PyKDL.Frame(PyKDL.Rotation(),
-                                 PyKDL.Vector(self._manip_offset[0],
-                                              self._manip_offset[1],
-                                              self._manip_offset[2]))
+            frame *= PyKDL.Frame(
+                PyKDL.Rotation(),
+                PyKDL.Vector(self._manip_offset[0], self._manip_offset[1],
+                             self._manip_offset[2]))
             msg.pose.pose.position.x = frame.p.x()
             msg.pose.pose.position.y = frame.p.y()
             msg.pose.pose.position.z = frame.p.z()
 
         msg.header.frame_id = self._frame_id
-        msgs = {
-            'odometry': msg
-            }
+        msgs = {'odometry': msg}
 
         t = TransformStamped()
         t.header = msg.header
-        t.child_frame_id = self._odom_frame
+        t.child_frame_id = "base_link_local"
         t.transform.rotation = msg.pose.pose.orientation
         t.transform.translation = msg.pose.pose.position
         msgs['tf'] = t
 
-        msg = to_odometry_message(vioOutput, self._coordinates,
+        msg = to_odometry_message(vioOutput,
+                                  self._coordinates,
                                   self._message_config,
                                   is_global=True)
         if msg is not None:

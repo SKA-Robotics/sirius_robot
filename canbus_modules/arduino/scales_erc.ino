@@ -12,6 +12,8 @@ HX711 scale;
 MCP2515 mcp2515(10);
 struct can_frame canMsg;
 
+
+
 // TODO: adjust calibration factor
 float calibration_factor = -459.542;
 
@@ -20,7 +22,7 @@ void setup() {
   Serial.println("Initializing scale and CAN");
 
   scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
-  scale.set_scale(calibration_factor);
+  scale.set_scale(1.0);
   scale.tare();
 
   mcp2515.reset();
@@ -45,6 +47,11 @@ void loop() {
   if (mcp2515.sendMessage(&canMsg) != MCP2515::ERROR_OK) {
     Serial.println("CAN send failed!");
   }
+
+  Serial.print("raw: ");
+  Serial.print(scale.get_value(10));
+  Serial.print("  g: ");
+  Serial.println(scale.get_units(10));
 
   delay(500);  // send every 0.5s
 }

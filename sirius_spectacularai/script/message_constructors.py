@@ -22,17 +22,22 @@ def to_pose_message(cameraPose, frame_id):
     return msg
 
 
-def to_odometry_message(vioOutput, coordinates,
-                        config,
-                        is_global=False,):
+def to_odometry_message(
+    vioOutput,
+    coordinates,
+    config,
+    is_global=False,
+):
     msg = Odometry()
     msg.header.stamp = rospy.Time.now()
     msg.header.frame_id = config.get('world_frame', 'odom')
-    msg.child_frame_id = config.get('frame_id',
-                                    'front_rgb_camera_optical')
+    msg.child_frame_id = config.get('frame_id', 'front_rgb_camera_optical')
 
     if vioOutput.globalPose is None and is_global:
-        return None
+        if config.get('no_gps', False):
+            is_global = False
+        else:
+            return None
 
     if is_global:
         datum = spectacularAI.WgsCoordinates()

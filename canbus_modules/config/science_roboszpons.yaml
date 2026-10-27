@@ -1,8 +1,8 @@
 science_roboszpon_driver:
   joints:
     module_lift:
-      node_id: 0x9
+      node_id: 0x10
     drill_lift:
-      node_id: 0x8
-    drill_spin:
       node_id: 0x11
+    drill_spin:
+      node_id: 0x8
